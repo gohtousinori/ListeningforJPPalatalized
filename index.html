@@ -39,7 +39,6 @@
   };
 
   const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYHlkCLsRIJifCDTMFdmLwXyz9PC31ReUz-RxWbasI3ywEVrn_LF9AKzWx-5bp6sXi0Q/exec';
-  const SHEET_ID = '1QNbIit_mmA-hdWUTdMOK7j_7JMsjWXnWGNrH9amUNF8';
   const PENDING_SUBMISSIONS_KEY = 'palatalizedsoundtest_pending_submissions';
 
   function createSubmissionId() {
@@ -284,13 +283,28 @@
       const stayYear = preFormData.stay_year || '';
       const stayMonth = preFormData.stay_month || '';
       const nativeLanguage = preFormData.native_language || '';
-      const japaneseLanguageOrder = preFormData.japanese_language_order || '';
-      const totalLanguagesLearned = preFormData.total_languages_learned || '';
-      const learnedLanguagesList = preFormData.learned_languages_list || '';
-      const phonologyTheoryExperience = preFormData.phonology_theory_experience || '';
-      const email = preFormData.email || '';
-      
+      const preLangData = allData.find(r => r.task === 'pre_survey_languages') || {};
+      const learnedLanguagesList = preLangData.learned_languages_list || preFormData.learned_languages_list || '';
+
+      const normalizeLanguageForMetrics = (language) => {
+        const value = String(language || '').trim().toLowerCase();
+        if (!value) return '';
+        if (['japanese (日本語)', 'japanese', '日本語'].includes(value)) return 'japanese';
+        return value;
+      };
+
+      const normalizedLanguages = learnedLanguagesList
+        .split(',')
+        .map(item => normalizeLanguageForMetrics(item))
+        .filter(Boolean);
+      const japaneseIndex = normalizedLanguages.findIndex(item => item === 'japanese');
+      const japaneseLanguageOrder = japaneseIndex >= 0 ? String(japaneseIndex + 1) : '';
+      const totalLanguagesLearned = String(normalizedLanguages.length || '');
+
       const preChoiceData = allData.find(r => r.task === 'pre_survey_choice') || {};
+      const phonologyTheoryExperience = preChoiceData.phonology_theory_experience || '';
+      const email = preChoiceData.email || '';
+      
       let pronExperience = '';
       if (preChoiceData.response) {
         let resp = preChoiceData.response;
@@ -328,6 +342,16 @@
 
       // ===================== Build result row (one row per participant) =====================
       const resultRow = {
+        'email': email,
+        'study_year': studyYear,
+        'study_month': studyMonth,
+        'stay_year': stayYear,
+        'stay_month': stayMonth,
+        'pron_experience': pronExperience,
+        'institution': institution,
+        'total_languages_learned': totalLanguagesLearned,
+        'learned_languages_list': learnedLanguagesList,
+        'phonology_theory_experience': phonologyTheoryExperience,
         'Email': email,
         '母語 / Native language': nativeLanguage,
         '日本語は第何言語か（300時間以上） / Japanese language order (300+ study hours)': japaneseLanguageOrder,
@@ -482,8 +506,7 @@
         submission_id: submissionId,
         native_language: nativeLanguage,
         respondent_data: resultRow,
-        detailed_results: detailedRows,
-        sheetId: SHEET_ID
+        detailed_results: detailedRows
       };
 
       queueSubmission(payload);
@@ -582,22 +605,6 @@
     `,
     choices: ['了解 / Close'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
-  };
-
-  // ========================================
-  // Step 3: Survey on pronunciation-learning experience.
-  // ========================================
-  const preSurveyChoice = {
-    type: jsPsychSurveyMultiChoice,
-    questions: [
-      {
-        prompt: '発音学習の経験はありますか。\n<div style="margin-top:6px;color:#ccc;font-size:0.9em">Have you received formal instruction in pronunciation? (Yes/No)</div>',
-        name: 'pron_experience',
-        options: ['無', '有'],
-        required: true
-      }
-    ],
-    data: { task: 'pre_survey_choice' }
   };
 
   // ========================================
@@ -754,20 +761,9 @@
             <select id="native_language">${nativeLanguageSelect}</select>
           </div>
 
-          <label><strong>日本語は、あなたにとって第何言語ですか（300時間以上学習した言語のみで数えてください）。</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate the order of Japanese among your languages, counting only languages for which you have studied at least 300 hours.</div>
-          <div style="margin:8px 0">
-            <select id="japanese_language_order">${languageOrderOptions}</select>
-          </div>
-
-          <label><strong>これまでに学習した言語の総数を選択してください。</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please select the total number of languages you have studied.</div>
-          <div style="margin:8px 0">
-            <select id="total_languages_learned">${totalLanguagesOptions}</select>
-          </div>
-
           <label><strong>学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. The first item must be your native language.</div>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">The system will automatically calculate the total number of languages and the order of Japanese from this list.</div>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please use standardized language names whenever available. If a language is not listed, please add it manually.</div>
           <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <select id="learned_language_picker" style="min-width:300px; max-width:100%;">${nativeLanguageSelect}</select>
@@ -818,7 +814,6 @@
       const addNativeFirstBtn = document.getElementById('add_native_first_btn');
       const learnedLanguagesOrdered = document.getElementById('learned_languages_ordered');
       const learnedLanguagesHidden = document.getElementById('learned_languages_list');
-      const totalLanguagesSelect = document.getElementById('total_languages_learned');
       const selectedLearnedLanguages = [];
 
       const renderLearnedLanguages = () => {
@@ -852,15 +847,6 @@
         });
 
         learnedLanguagesHidden.value = selectedLearnedLanguages.join(', ');
-
-        if (totalLanguagesSelect) {
-          const count = selectedLearnedLanguages.length;
-          if (count >= 1 && count <= 20) {
-            totalLanguagesSelect.value = String(count);
-          } else if (count > 20) {
-            totalLanguagesSelect.value = '21+';
-          }
-        }
       };
 
       const addLearnedLanguage = (value) => {
@@ -915,8 +901,6 @@
         const stay_year = document.getElementById('stay_year')?.value || '';
         const stay_month = document.getElementById('stay_month')?.value || '';
         const native_language = document.getElementById('native_language')?.value || '';
-        const japanese_language_order = document.getElementById('japanese_language_order')?.value || '';
-        const total_languages_learned = document.getElementById('total_languages_learned')?.value || '';
         const learned_languages_list_raw = document.getElementById('learned_languages_list')?.value || '';
         const learned_languages_list = learned_languages_list_raw
           .split(/\r?\n|,/)
@@ -924,8 +908,11 @@
           .filter(Boolean)
           .join(', ');
         const phonology_theory_experience = document.getElementById('phonology_theory_experience')?.value || '';
+        const languageMetrics = computeLanguageMetrics(selectedLearnedLanguages);
+        const japanese_language_order = languageMetrics.japaneseLanguageOrder;
+        const total_languages_learned = String(languageMetrics.totalLanguagesLearned || '');
         
-        if (!study_year || !study_month || !stay_year || !stay_month || !native_language || !japanese_language_order || !total_languages_learned || !learned_languages_list || !phonology_theory_experience) {
+        if (!study_year || !study_month || !stay_year || !stay_month || !native_language || !learned_languages_list || !phonology_theory_experience) {
           const errorDiv = document.getElementById('validationError');
           errorDiv.innerText = 'Please complete all required fields.\n必須項目を選択してください。';
           errorDiv.style.display = 'block';
@@ -943,6 +930,13 @@
         if (learnedItems[0] !== native_language) {
           const errorDiv = document.getElementById('validationError');
           errorDiv.innerText = 'The first language in the list must be your native language.\nリストの最初は必ず母語にしてください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        if (!japanese_language_order) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'Please include Japanese in your learned-language list so the system can calculate its order automatically.\n学習言語リストに日本語を含めてください。';
           errorDiv.style.display = 'block';
           return;
         }
@@ -970,21 +964,843 @@
   };
 
   // ========================================
-  // Step 5: Pre-survey section 2 (conditional).
+  // Step 4b: Pre-survey section 1A - language background list.
   // ========================================
-  const institutionTrial = {
-    type: jsPsychSurveyText,
-    questions: [
-      {
-        prompt: 'Have you received systematic Japanese pronunciation instruction at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
-        name: 'institution',
-        placeholder: '受講した場合は機関名を入力',
-        required: false
-      }
-    ],
-    data: { task: 'pre_survey_institution' }
+  const languageListForm = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function() {
+      const nativeLanguageOptions = [
+        { label: '----- Asian Languages -----', disabled: true },
+        'Thai (ภาษาไทย)',
+        'Japanese (日本語)',
+        'Korean (한국어)',
+        'Vietnamese (Tiếng Việt)',
+        'Indonesian (Bahasa Indonesia)',
+        'Filipino, Tagalog (Filipino/Tagalog)',
+        'Malay (Bahasa Melayu)',
+        'Nepali (नेपाली)',
+        'Sinhala (සිංහල)',
+        'Khmer (ខ្មែរ)',
+        'Mongolian (Монгол)',
+        'Kazakh (Қазақ тілі)',
+        'Uzbek (Oʻzbekcha)',
+        'Pashto (پښتو)',
+        'Tibetan (བོད་ཡིག)',
+        'Lao (ພາສາລາວ)',
+        'Burmese (မြန်မာဘာသာ)',
+        'Turkish (Türkçe)',
+        { label: '----- Chinese Languages -----', disabled: true },
+        'Chinese, Mandarin (中文/普通话)',
+        'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
+        'Chinese, Cantonese (中文/廣東話)',
+        { label: '----- Indian Languages -----', disabled: true },
+        'Hindi (हिन्दी)',
+        'Punjabi (ਪੰਜਾਬੀ)',
+        'Bengali (বাংলা)',
+        'Telugu (తెలుగు)',
+        'Tamil (தமிழ்)',
+        'Marathi (मराठी)',
+        'Gujarati (ગુજરાતी)',
+        { label: '----- European and American Languages -----', disabled: true },
+        'English (US)',
+        'English (UK)',
+        'French (Français)',
+        'French, Canadian (Français canadien)',
+        'German (Deutsch)',
+        'Hungarian (Magyar)',
+        'Italian (Italiano)',
+        'Spanish (español)',
+        'Portuguese (português)',
+        'Portuguese, Brazilian (Português do Brasil)',
+        'Haitian Creole (Kreyòl Ayisyen)',
+        'Danish (Dansk)',
+        'Finnish (Suomi)',
+        'Norwegian (Norsk)',
+        'Swedish (Svenska)',
+        'Greek (Ελληνικά)',
+        'Albanian (Shqip)',
+        'Dutch (Nederlands)',
+        'Romanian (Română)',
+        'Lithuanian (Lietuvių)',
+        'Latvian (Latviešu)',
+        'Estonian (Eesti)',
+        { label: '----- Slavic Languages -----', disabled: true },
+        'Russian (Русский)',
+        'Belarusian (Беларуская)',
+        'Ukrainian (Українська)',
+        'Polish (Polski)',
+        'Czech (Čeština)',
+        'Slovak (Slovenčina)',
+        'Bulgarian (Български)',
+        'Macedonian (Македонски)',
+        'Slovenian (Slovenščina)',
+        'Croatian (Hrvatski)',
+        'Bosnian (Bosanski)',
+        'Serbian (Српски)',
+        { label: '----- Middle Eastern Languages -----', disabled: true },
+        'Arabic (العربية)',
+        'Persian, Farsi (فارسی)',
+        'Urdu (اردو)',
+        'Hebrew (עברית)',
+        'Kurdish (Kurdî)',
+        'Armenian (Հայերեն)',
+        { label: '----- African Languages -----', disabled: true },
+        'Swahili (Kiswahili)',
+        'Amharic (አማርኛ)',
+        'Somali (Soomaali)',
+        'Hausa (Hausa)',
+        'Yoruba (Yorùbá)',
+        'Zulu (isiZulu)',
+        { label: '----- Oceanian Languages -----', disabled: true },
+        'Maori (Te Reo Māori)'
+      ];
+
+      let nativeLanguageSelect = '<option value="">Select / 選択してください</option>';
+      nativeLanguageOptions.forEach(item => {
+        if (typeof item === 'string') {
+          nativeLanguageSelect += `<option value="${item}">${item}</option>`;
+          return;
+        }
+        nativeLanguageSelect += `<option value="" disabled>${item.label}</option>`;
+      });
+
+      return `
+        <div style="color:#fff">
+          <label><strong>学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. The first item must be your native language.</div>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please use standardized language names whenever available. If a language is not listed, please add it manually.</div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="learned_language_picker" style="min-width:300px; max-width:100%;">${nativeLanguageSelect}</select>
+            <button type="button" id="add_learned_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add from list / リストから追加</button>
+          </div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input id="learned_language_custom" type="text" placeholder="Custom language (if not listed) / 自由入力（リストにない場合）" style="width:100%; max-width:500px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+            <button type="button" id="add_custom_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add custom / 自由入力を追加</button>
+          </div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button type="button" id="add_native_first_btn" style="padding:6px 12px; background:#333; color:#fff; border:1px solid #666; border-radius:4px; cursor:pointer;">Add native language as first item / 母語を先頭に追加</button>
+          </div>
+          <div style="margin-top:8px; color:#ccc; font-size:0.9em;">Current order / 現在の順序</div>
+          <ol id="learned_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
+          <input id="learned_languages_list" type="hidden" value="" />
+
+          <button id="languageListNextBtn" style="margin-top:20px; padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Proceed / 続行</button>
+          <div id="languageListError" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+        </div>
+      `;
+    },
+    choices: [],
+    data: { task: 'pre_survey_languages' },
+    on_load: function() {
+      const btn = document.getElementById('languageListNextBtn');
+      const learnedLanguagePicker = document.getElementById('learned_language_picker');
+      const learnedLanguageCustom = document.getElementById('learned_language_custom');
+      const addLearnedLanguageBtn = document.getElementById('add_learned_language_btn');
+      const addCustomLanguageBtn = document.getElementById('add_custom_language_btn');
+      const addNativeFirstBtn = document.getElementById('add_native_first_btn');
+      const learnedLanguagesOrdered = document.getElementById('learned_languages_ordered');
+      const learnedLanguagesHidden = document.getElementById('learned_languages_list');
+      const selectedLearnedLanguages = [];
+
+      const renderLearnedLanguages = () => {
+        learnedLanguagesOrdered.innerHTML = '';
+
+        selectedLearnedLanguages.forEach((language, index) => {
+          const li = document.createElement('li');
+          li.style.margin = '6px 0';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = language;
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove';
+          removeBtn.style.marginLeft = '10px';
+          removeBtn.style.padding = '2px 8px';
+          removeBtn.style.background = '#222';
+          removeBtn.style.color = '#fff';
+          removeBtn.style.border = '1px solid #555';
+          removeBtn.style.borderRadius = '4px';
+          removeBtn.style.cursor = 'pointer';
+          removeBtn.addEventListener('click', () => {
+            selectedLearnedLanguages.splice(index, 1);
+            renderLearnedLanguages();
+          });
+
+          li.appendChild(labelSpan);
+          li.appendChild(removeBtn);
+          learnedLanguagesOrdered.appendChild(li);
+        });
+
+        learnedLanguagesHidden.value = selectedLearnedLanguages.join(', ');
+      };
+
+      const addLearnedLanguage = (value) => {
+        const language = (value || '').trim();
+        if (!language) return;
+
+        if (selectedLearnedLanguages.includes(language)) {
+          const errorDiv = document.getElementById('languageListError');
+          errorDiv.innerText = 'This language has already been added.\n同じ言語は既に追加されています。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        selectedLearnedLanguages.push(language);
+        const errorDiv = document.getElementById('languageListError');
+        errorDiv.style.display = 'none';
+        renderLearnedLanguages();
+      };
+
+      addLearnedLanguageBtn.addEventListener('click', function() {
+        addLearnedLanguage(learnedLanguagePicker?.value || '');
+      });
+
+      addCustomLanguageBtn.addEventListener('click', function() {
+        addLearnedLanguage(learnedLanguageCustom?.value || '');
+        if (learnedLanguageCustom) learnedLanguageCustom.value = '';
+      });
+
+      addNativeFirstBtn.addEventListener('click', function() {
+        const nativeLanguage = document.getElementById('native_language')?.value || '';
+        if (!nativeLanguage) {
+          const errorDiv = document.getElementById('languageListError');
+          errorDiv.innerText = 'Please go back and select your native language first.\n先に母語を選択してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        const existingIndex = selectedLearnedLanguages.indexOf(nativeLanguage);
+        if (existingIndex !== -1) {
+          selectedLearnedLanguages.splice(existingIndex, 1);
+        }
+        selectedLearnedLanguages.unshift(nativeLanguage);
+
+        const errorDiv = document.getElementById('languageListError');
+        errorDiv.style.display = 'none';
+        renderLearnedLanguages();
+      });
+
+      btn.addEventListener('click', function() {
+        const native_language = document.getElementById('native_language')?.value || '';
+        const learned_languages_list_raw = document.getElementById('learned_languages_list')?.value || '';
+        const learned_languages_list = learned_languages_list_raw
+          .split(/\r?\n|,/) 
+          .map(item => item.trim())
+          .filter(Boolean)
+          .join(', ');
+
+        if (!native_language || !learned_languages_list) {
+          const errorDiv = document.getElementById('languageListError');
+          errorDiv.innerText = 'Please add the language list in chronological order.\n学習順に言語を追加してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        const learnedItems = learned_languages_list.split(',').map(s => s.trim()).filter(Boolean);
+        if (learnedItems.length === 0) {
+          const errorDiv = document.getElementById('languageListError');
+          errorDiv.innerText = 'Please add at least one learned language.\n学習言語を少なくとも1つ追加してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        if (learnedItems[0] !== native_language) {
+          const errorDiv = document.getElementById('languageListError');
+          errorDiv.innerText = 'The first language in the list must be your native language.\nリストの最初は必ず母語にしてください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        jsPsych.data.write({
+          task: 'pre_survey_languages',
+          learned_languages_list
+        });
+        jsPsych.finishTrial();
+      });
+    }
   };
 
+  // ========================================
+  // Step 4c: Pre-survey section 2 - phonology, email, pronunciation experience.
+  // ========================================
+  const preSurveyWizard = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '',
+    choices: 'NO_KEYS',
+    data: { task: 'pre_survey_wizard' },
+    on_load: function() {
+      const displayElement = document.getElementById('jspsych-content');
+
+      const languageOptions = [
+        { label: '----- Asian Languages -----', disabled: true },
+        'Thai (ภาษาไทย)',
+        'Japanese (日本語)',
+        'Korean (한국어)',
+        'Vietnamese (Tiếng Việt)',
+        'Indonesian (Bahasa Indonesia)',
+        'Filipino, Tagalog (Filipino/Tagalog)',
+        'Malay (Bahasa Melayu)',
+        'Nepali (नेपाली)',
+        'Sinhala (සිංහල)',
+        'Khmer (ខ្មែរ)',
+        'Mongolian (Монгол)',
+        'Kazakh (Қазақ тілі)',
+        'Uzbek (Oʻzbekcha)',
+        'Pashto (پښتو)',
+        'Tibetan (བོད་ཡིག)',
+        'Lao (ພາສາລາວ)',
+        'Burmese (မြန်မာဘာသာ)',
+        'Turkish (Türkçe)',
+        { label: '----- Chinese Languages -----', disabled: true },
+        'Chinese, Mandarin (中文/普通话)',
+        'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
+        'Chinese, Cantonese (中文/廣東話)',
+        { label: '----- Indian Languages -----', disabled: true },
+        'Hindi (हिन्दी)',
+        'Punjabi (ਪੰਜਾਬੀ)',
+        'Bengali (বাংলা)',
+        'Telugu (తెలుగు)',
+        'Tamil (தமிழ்)',
+        'Marathi (मराठी)',
+        'Gujarati (ગુજરાતી)',
+        { label: '----- European and American Languages -----', disabled: true },
+        'English (US)',
+        'English (UK)',
+        'French (Français)',
+        'French, Canadian (Français canadien)',
+        'German (Deutsch)',
+        'Hungarian (Magyar)',
+        'Italian (Italiano)',
+        'Spanish (español)',
+        'Portuguese (português)',
+        'Portuguese, Brazilian (Português do Brasil)',
+        'Haitian Creole (Kreyòl Ayisyen)',
+        'Danish (Dansk)',
+        'Finnish (Suomi)',
+        'Norwegian (Norsk)',
+        'Swedish (Svenska)',
+        'Greek (Ελληνικά)',
+        'Albanian (Shqip)',
+        'Dutch (Nederlands)',
+        'Romanian (Română)',
+        'Lithuanian (Lietuvių)',
+        'Latvian (Latviešu)',
+        'Estonian (Eesti)',
+        { label: '----- Slavic Languages -----', disabled: true },
+        'Russian (Русский)',
+        'Belarusian (Беларуская)',
+        'Ukrainian (Українська)',
+        'Polish (Polski)',
+        'Czech (Čeština)',
+        'Slovak (Slovenčina)',
+        'Bulgarian (Български)',
+        'Macedonian (Македонски)',
+        'Slovenian (Slovenščina)',
+        'Croatian (Hrvatski)',
+        'Bosnian (Bosanski)',
+        'Serbian (Српски)',
+        { label: '----- Middle Eastern Languages -----', disabled: true },
+        'Arabic (العربية)',
+        'Persian, Farsi (فارسی)',
+        'Urdu (اردو)',
+        'Hebrew (עברית)',
+        'Kurdish (Kurdî)',
+        'Armenian (Հայերեն)',
+        { label: '----- African Languages -----', disabled: true },
+        'Swahili (Kiswahili)',
+        'Amharic (አማርኛ)',
+        'Somali (Soomaali)',
+        'Hausa (Hausa)',
+        'Yoruba (Yorùbá)',
+        'Zulu (isiZulu)',
+        { label: '----- Oceanian Languages -----', disabled: true },
+        'Maori (Te Reo Māori)'
+      ];
+
+      const buildSelectOptions = () => {
+        let selectHtml = '<option value="">Select / 選択してください</option>';
+        languageOptions.forEach(item => {
+          if (typeof item === 'string') {
+            selectHtml += `<option value="${item}">${item}</option>`;
+            return;
+          }
+          selectHtml += `<option value="" disabled>${item.label}</option>`;
+        });
+        return selectHtml;
+      };
+
+      const buildYearOptions = () => {
+        let options = '<option value="">Select / 選択してください</option>';
+        for (let i = 0; i <= 50; i++) {
+          const label = i === 1 ? 'year' : 'years';
+          options += `<option value="${i}">${i} ${label} / ${i} 年</option>`;
+        }
+        return options;
+      };
+
+      const buildMonthOptions = () => {
+        let options = '<option value="">Select / 選択してください</option>';
+        for (let i = 0; i <= 12; i++) {
+          const label = i === 1 ? 'month' : 'months';
+          options += `<option value="${i}">${i} ${label} / ${i} ヶ月</option>`;
+        }
+        options += '<option value="3">Not sure (about 0-6 months) / 不確定(約0-6か月)</option>';
+        options += '<option value="9">Not sure (about 6-12 months) / 不確定(約6-12か月)</option>';
+        return options;
+      };
+
+      const normalizeLanguageForMetrics = (language) => {
+        const value = String(language || '').trim().toLowerCase();
+        if (!value) return '';
+        if (['japanese (日本語)', 'japanese', '日本語'].includes(value)) return 'japanese';
+        return value;
+      };
+
+      const computeLanguageMetrics = (languages) => {
+        const normalized = (languages || [])
+          .map(language => normalizeLanguageForMetrics(language))
+          .filter(Boolean);
+        const japaneseIndex = normalized.findIndex(language => language === 'japanese');
+        return {
+          japaneseLanguageOrder: japaneseIndex >= 0 ? String(japaneseIndex + 1) : '',
+          totalLanguagesLearned: String(normalized.length || '')
+        };
+      };
+
+      const state = {
+        step: 1,
+        studyYear: '',
+        studyMonth: '',
+        stayYear: '',
+        stayMonth: '',
+        nativeLanguage: '',
+        learnedLanguages: [],
+        phonologyTheoryExperience: '',
+        pronExperience: '',
+        emailUser: '',
+        emailDomain: '',
+        emailTld: '',
+        institution: ''
+      };
+
+      const getEmail = () => {
+        const user = state.emailUser.trim();
+        const domain = state.emailDomain.trim();
+        const tld = state.emailTld.trim();
+        return (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
+      };
+
+      const showError = (targetId, message) => {
+        const errorDiv = document.getElementById(targetId);
+        if (errorDiv) {
+          errorDiv.innerText = message;
+          errorDiv.style.display = 'block';
+        }
+      };
+
+      const clearError = (targetId) => {
+        const errorDiv = document.getElementById(targetId);
+        if (errorDiv) {
+          errorDiv.innerText = '';
+          errorDiv.style.display = 'none';
+        }
+      };
+
+      const renderStep = () => {
+        if (!displayElement) return;
+
+        if (state.step === 1) {
+          displayElement.innerHTML = `
+            <div style="color:#fff; text-align:left; max-width:820px; margin:0 auto;">
+              <h2 style="text-align:center; margin-top:0;">Pre-survey / 事前質問</h2>
+              <label><strong>学習期間（累積）はどのくらいですか？</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your total duration of Japanese language study (years/months).</div>
+              <div style="margin:8px 0">
+                <select id="wizard_study_year">${buildYearOptions()}</select>
+                <select id="wizard_study_month">${buildMonthOptions()}</select>
+              </div>
+              <label><strong>滞在期間（合計）はどのくらいですか？</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your cumulative length of residence in Japan (years/months).</div>
+              <div style="margin:8px 0">
+                <select id="wizard_stay_year">${buildYearOptions()}</select>
+                <select id="wizard_stay_month">${buildMonthOptions()}</select>
+              </div>
+              <label><strong>母語（第一言語）を選択してください。</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please select your native language (L1).</div>
+              <div style="margin:8px 0">
+                <select id="wizard_native_language">${buildSelectOptions()}</select>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
+                <button type="button" id="wizard_step1_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Next / 次へ</button>
+              </div>
+              <div id="wizard_step1_error" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+            </div>
+          `;
+
+          document.getElementById('wizard_study_year').value = state.studyYear;
+          document.getElementById('wizard_study_month').value = state.studyMonth;
+          document.getElementById('wizard_stay_year').value = state.stayYear;
+          document.getElementById('wizard_stay_month').value = state.stayMonth;
+          document.getElementById('wizard_native_language').value = state.nativeLanguage;
+
+          document.getElementById('wizard_step1_next').addEventListener('click', function() {
+            state.studyYear = document.getElementById('wizard_study_year')?.value || '';
+            state.studyMonth = document.getElementById('wizard_study_month')?.value || '';
+            state.stayYear = document.getElementById('wizard_stay_year')?.value || '';
+            state.stayMonth = document.getElementById('wizard_stay_month')?.value || '';
+            state.nativeLanguage = document.getElementById('wizard_native_language')?.value || '';
+
+            if (!state.studyYear || !state.studyMonth || !state.stayYear || !state.stayMonth || !state.nativeLanguage) {
+              showError('wizard_step1_error', 'Please complete all required fields.\n必須項目を選択してください。');
+              return;
+            }
+
+            clearError('wizard_step1_error');
+            state.step = 2;
+            renderStep();
+          });
+          return;
+        }
+
+        if (state.step === 2) {
+          displayElement.innerHTML = `
+            <div style="color:#fff; text-align:left; max-width:820px; margin:0 auto;">
+              <h2 style="text-align:center; margin-top:0;">Language order / 言語順</h2>
+              <label><strong>学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. The first item must be your native language.</div>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">The system will automatically calculate the total number of languages and the order of Japanese from this list.</div>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please use standardized language names whenever available. If a language is not listed, please add it manually.</div>
+              <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="wizard_language_picker" style="min-width:300px; max-width:100%;">${buildSelectOptions()}</select>
+                <button type="button" id="wizard_add_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add from list / リストから追加</button>
+              </div>
+              <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="wizard_language_custom" type="text" placeholder="Custom language (if not listed) / 自由入力（リストにない場合）" style="width:100%; max-width:500px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+                <button type="button" id="wizard_add_custom_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add custom / 自由入力を追加</button>
+              </div>
+              <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button type="button" id="wizard_native_first_btn" style="padding:6px 12px; background:#333; color:#fff; border:1px solid #666; border-radius:4px; cursor:pointer;">Add native language as first item / 母語を先頭に追加</button>
+              </div>
+              <div style="margin-top:8px; color:#ccc; font-size:0.9em;">Current order / 現在の順序</div>
+              <ol id="wizard_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
+              <input id="wizard_languages_hidden" type="hidden" value="${state.learnedLanguages.join(', ')}" />
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
+                <button type="button" id="wizard_step2_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">Back / 戻る</button>
+                <button type="button" id="wizard_step2_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Next / 次へ</button>
+              </div>
+              <div id="wizard_step2_error" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+            </div>
+          `;
+
+          const learnedListElement = document.getElementById('wizard_languages_ordered');
+          const hiddenField = document.getElementById('wizard_languages_hidden');
+
+          const renderLanguages = () => {
+            learnedListElement.innerHTML = '';
+            state.learnedLanguages.forEach((language, index) => {
+              const li = document.createElement('li');
+              li.style.margin = '6px 0';
+
+              const labelSpan = document.createElement('span');
+              labelSpan.textContent = language;
+
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.textContent = 'Remove';
+              removeBtn.style.marginLeft = '10px';
+              removeBtn.style.padding = '2px 8px';
+              removeBtn.style.background = '#222';
+              removeBtn.style.color = '#fff';
+              removeBtn.style.border = '1px solid #555';
+              removeBtn.style.borderRadius = '4px';
+              removeBtn.style.cursor = 'pointer';
+              removeBtn.addEventListener('click', () => {
+                state.learnedLanguages.splice(index, 1);
+                renderLanguages();
+                clearError('wizard_step2_error');
+              });
+
+              li.appendChild(labelSpan);
+              li.appendChild(removeBtn);
+              learnedListElement.appendChild(li);
+            });
+
+            hiddenField.value = state.learnedLanguages.join(', ');
+          };
+
+          const addLanguage = (value) => {
+            const language = String(value || '').trim();
+            if (!language) return;
+
+            if (state.learnedLanguages.includes(language)) {
+              showError('wizard_step2_error', 'This language has already been added.\n同じ言語は既に追加されています。');
+              return;
+            }
+
+            state.learnedLanguages.push(language);
+            clearError('wizard_step2_error');
+            renderLanguages();
+          };
+
+          document.getElementById('wizard_add_language_btn').addEventListener('click', function() {
+            addLanguage(document.getElementById('wizard_language_picker')?.value || '');
+          });
+
+          document.getElementById('wizard_add_custom_btn').addEventListener('click', function() {
+            addLanguage(document.getElementById('wizard_language_custom')?.value || '');
+            const customInput = document.getElementById('wizard_language_custom');
+            if (customInput) customInput.value = '';
+          });
+
+          document.getElementById('wizard_native_first_btn').addEventListener('click', function() {
+            if (!state.nativeLanguage) {
+              showError('wizard_step2_error', 'Please go back and select your native language first.\n先に母語を選択してください。');
+              return;
+            }
+
+            const existingIndex = state.learnedLanguages.indexOf(state.nativeLanguage);
+            if (existingIndex !== -1) {
+              state.learnedLanguages.splice(existingIndex, 1);
+            }
+            state.learnedLanguages.unshift(state.nativeLanguage);
+            clearError('wizard_step2_error');
+            renderLanguages();
+          });
+
+          document.getElementById('wizard_step2_back').addEventListener('click', function() {
+            state.step = 1;
+            renderStep();
+          });
+
+          document.getElementById('wizard_step2_next').addEventListener('click', function() {
+            const learnedLanguagesList = state.learnedLanguages.filter(Boolean);
+            if (learnedLanguagesList.length === 0) {
+              showError('wizard_step2_error', 'Please add at least one learned language.\n学習言語を少なくとも1つ追加してください。');
+              return;
+            }
+
+            if (learnedLanguagesList[0] !== state.nativeLanguage) {
+              showError('wizard_step2_error', 'The first language in the list must be your native language.\nリストの最初は必ず母語にしてください。');
+              return;
+            }
+
+            clearError('wizard_step2_error');
+            state.step = 3;
+            renderStep();
+          });
+
+          renderLanguages();
+          return;
+        }
+
+        if (state.step === 3) {
+          displayElement.innerHTML = `
+            <div style="color:#fff; text-align:left; max-width:820px; margin:0 auto;">
+              <h2 style="text-align:center; margin-top:0;">Background / 背景情報</h2>
+              <label><strong>音韻論・音声学の学術的・理論的な学習経験はありますか。</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Do you have academic and/or theoretical training in phonology and/or phonetics?</div>
+              <div style="margin:8px 0">
+                <select id="wizard_phonology_select">
+                  <option value="">Select / 選択してください</option>
+                  <option value="無">無 / No</option>
+                  <option value="有">有 / Yes</option>
+                </select>
+              </div>
+              <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
+              必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
+              This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
+              <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
+                <input id="wizard_email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+                <span>@</span>
+                <input id="wizard_email_domain" type="text" placeholder="example" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+                <span>.</span>
+                <input id="wizard_email_tld" type="text" placeholder="com" style="width:80px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+              </div>
+              <label><strong>発音学習の経験はありますか。</strong></label>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Have you received formal instruction in pronunciation? (Yes/No)</div>
+              <div style="margin:8px 0">
+                <select id="wizard_pron_select">
+                  <option value="">Select / 選択してください</option>
+                  <option value="無">無 / No</option>
+                  <option value="有">有 / Yes</option>
+                </select>
+              </div>
+              <div id="wizard_institution_wrap" style="display:none; margin-top: 14px;">
+                <label><strong>Have you received systematic Japanese pronunciation instruction at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）</strong></label>
+                <div style="margin-top:6px;color:#ccc;font-size:0.9em">If you answered Yes above, please enter the institution name.</div>
+                <input id="wizard_institution_input" type="text" placeholder="受講した場合は機関名を入力" style="width:100%; max-width:680px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em; margin-top:8px;" />
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
+                <button type="button" id="wizard_step3_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">Back / 戻る</button>
+                <button type="button" id="wizard_step3_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Next / 次へ</button>
+              </div>
+              <div id="wizard_step3_error" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+            </div>
+          `;
+
+          document.getElementById('wizard_phonology_select').value = state.phonologyTheoryExperience;
+          document.getElementById('wizard_email_user').value = state.emailUser;
+          document.getElementById('wizard_email_domain').value = state.emailDomain;
+          document.getElementById('wizard_email_tld').value = state.emailTld;
+          document.getElementById('wizard_pron_select').value = state.pronExperience;
+          document.getElementById('wizard_institution_input').value = state.institution;
+
+          const phonSelect = document.getElementById('wizard_phonology_select');
+          const pronSelect = document.getElementById('wizard_pron_select');
+          const institutionWrap = document.getElementById('wizard_institution_wrap');
+          const institutionInput = document.getElementById('wizard_institution_input');
+
+          const toggleInstitution = () => {
+            const show = pronSelect?.value === '有';
+            institutionWrap.style.display = show ? 'block' : 'none';
+            if (!show && institutionInput) institutionInput.value = '';
+          };
+
+          phonSelect.addEventListener('change', () => {
+            state.phonologyTheoryExperience = phonSelect?.value || '';
+          });
+          pronSelect.addEventListener('change', () => {
+            state.pronExperience = pronSelect?.value || '';
+            toggleInstitution();
+          });
+          institutionInput.addEventListener('input', () => {
+            state.institution = institutionInput?.value || '';
+          });
+          document.getElementById('wizard_email_user').addEventListener('input', () => {
+            state.emailUser = document.getElementById('wizard_email_user')?.value || '';
+          });
+          document.getElementById('wizard_email_domain').addEventListener('input', () => {
+            state.emailDomain = document.getElementById('wizard_email_domain')?.value || '';
+          });
+          document.getElementById('wizard_email_tld').addEventListener('input', () => {
+            state.emailTld = document.getElementById('wizard_email_tld')?.value || '';
+          });
+
+          toggleInstitution();
+
+          document.getElementById('wizard_step3_back').addEventListener('click', function() {
+            state.step = 2;
+            renderStep();
+          });
+
+          document.getElementById('wizard_step3_next').addEventListener('click', function() {
+            state.phonologyTheoryExperience = document.getElementById('wizard_phonology_select')?.value || '';
+            state.emailUser = document.getElementById('wizard_email_user')?.value || '';
+            state.emailDomain = document.getElementById('wizard_email_domain')?.value || '';
+            state.emailTld = document.getElementById('wizard_email_tld')?.value || '';
+            state.pronExperience = document.getElementById('wizard_pron_select')?.value || '';
+            state.institution = document.getElementById('wizard_institution_input')?.value || '';
+
+            if (!state.phonologyTheoryExperience || !state.pronExperience) {
+              showError('wizard_step3_error', 'Please complete the required fields.\n必須項目を選択してください。');
+              return;
+            }
+
+            if (state.pronExperience === '有' && !state.institution.trim()) {
+              showError('wizard_step3_error', 'Please provide the institution name if you answered Yes.\n「有」の場合は受講機関を入力してください。');
+              return;
+            }
+
+            clearError('wizard_step3_error');
+            state.step = 4;
+            renderStep();
+          });
+          return;
+        }
+
+        const learnedLanguagesList = state.learnedLanguages.filter(Boolean).join(', ');
+        const languageMetrics = computeLanguageMetrics(state.learnedLanguages);
+        const email = getEmail();
+        const institution = state.pronExperience === '有' ? state.institution.trim() : '';
+
+        displayElement.innerHTML = `
+          <div style="color:#fff; text-align:left; max-width:900px; margin:0 auto;">
+            <h2 style="text-align:center; margin-top:0;">確認 / Confirmation</h2>
+            <div style="background:#111; border:1px solid #444; border-radius:8px; padding:18px 20px; line-height:1.8;">
+              <h3 style="margin-top:0;">1. 基本情報</h3>
+              <div><strong>学習期間:</strong> ${state.studyYear} year(s) / ${state.studyMonth} month(s)</div>
+              <div><strong>滞在期間:</strong> ${state.stayYear} year(s) / ${state.stayMonth} month(s)</div>
+              <div><strong>母語:</strong> ${state.nativeLanguage}</div>
+              <h3>2. 学習言語リスト</h3>
+              <div><strong>学習順:</strong> ${learnedLanguagesList || '(none)'}</div>
+              <div><strong>日本語の順番:</strong> ${languageMetrics.japaneseLanguageOrder || '(not found)'}</div>
+              <div><strong>学習言語数:</strong> ${languageMetrics.totalLanguagesLearned || '(not found)'}</div>
+              <h3>3. その他</h3>
+              <div><strong>音韻論・音声学の学習経験:</strong> ${state.phonologyTheoryExperience}</div>
+              <div><strong>発音学習の経験:</strong> ${state.pronExperience}</div>
+              <div><strong>受講機関:</strong> ${institution || '(none)'}</div>
+              <div><strong>Email:</strong> ${email || '(none)'}</div>
+            </div>
+            <div style="margin-top:18px; color:#ccc; font-size:0.95em; line-height:1.7;">
+              内容に問題がなければ次へ進んでください。ここでは戻れますが、次の画面からは戻れません。
+              <br>
+              If everything looks correct, proceed to the listening test. You may go back from this screen only.
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
+              <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">Back / 戻る</button>
+              <button type="button" id="wizard_confirm_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Proceed to listening test / 音声テストへ進む</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('wizard_confirm_back').addEventListener('click', function() {
+          state.step = 3;
+          renderStep();
+        });
+
+        document.getElementById('wizard_confirm_next').addEventListener('click', function() {
+          const finalLearnedLanguagesList = state.learnedLanguages.filter(Boolean).join(', ');
+          const finalLanguageMetrics = computeLanguageMetrics(state.learnedLanguages);
+          const finalEmail = getEmail();
+          const finalInstitution = state.pronExperience === '有' ? state.institution.trim() : '';
+
+          jsPsych.data.write({
+            task: 'pre_survey_form',
+            study_year: state.studyYear,
+            study_month: state.studyMonth,
+            stay_year: state.stayYear,
+            stay_month: state.stayMonth,
+            native_language: state.nativeLanguage,
+            japanese_language_order: finalLanguageMetrics.japaneseLanguageOrder,
+            total_languages_learned: finalLanguageMetrics.totalLanguagesLearned,
+            learned_languages_list: finalLearnedLanguagesList,
+            phonology_theory_experience: state.phonologyTheoryExperience,
+            email: finalEmail
+          });
+
+          jsPsych.data.write({
+            task: 'pre_survey_languages',
+            learned_languages_list: finalLearnedLanguagesList
+          });
+
+          jsPsych.data.write({
+            task: 'pre_survey_choice',
+            response: state.pronExperience,
+            pron_experience: state.pronExperience,
+            email: finalEmail,
+            phonology_theory_experience: state.phonologyTheoryExperience
+          });
+
+          if (state.pronExperience === '有') {
+            jsPsych.data.write({
+              task: 'pre_survey_institution',
+              institution: finalInstitution
+            });
+          }
+
+          jsPsych.finishTrial();
+        });
+      };
+
+      renderStep();
+    }
+  };
+
+  // ========================================
+  // Step 5: Pre-survey confirmation wizard.
+  // ========================================
   // ========================================
   // Step 6: Experiment instructions.
   // ========================================
@@ -1031,22 +1847,7 @@
   };
   timeline.push(conditionalConsent);
   
-  timeline.push(preSurveyForm);
-  timeline.push(preSurveyChoice);
-  const conditionalInstitution = {
-    timeline: [institutionTrial],
-    conditional_function: function() {
-      const last = jsPsych.data.get().last(1).values()[0];
-      let resp = last.response || last.responses;
-      if (typeof resp === 'string') {
-        try { resp = JSON.parse(resp); } catch(e) {}
-      }
-      if (Array.isArray(resp)) return resp.includes('有');
-      if (resp && typeof resp === 'object') return Object.values(resp).indexOf('有') !== -1 || Object.values(resp).some(v=>v==='有');
-      return resp === '有';
-    }
-  };
-  timeline.push(conditionalInstitution);
+  timeline.push(preSurveyWizard);
   timeline.push(instructions);
 
   // ========================================
