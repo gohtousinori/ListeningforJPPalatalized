@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>日本語音声聴覚識別調査 / การทดสอบการแยกแยะเสียงภาษาญี่ปุ่น</title>
+  <script src="https://unpkg.com/jspsych@7.3.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@1.1.0"></script>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
+  <style>
+    body { background: #000; color: #fff; }
+    .jspsych-display-element, .jspsych-content-wrapper { background: #000; color: #fff; }
+    .jspsych-btn { background: #222; color: #fff; border: 1px solid #555; }
+    input[type="text"], input[type="email"], textarea { background: #111; color: #fff; border: 1px solid #444; }
+  </style>
+</head>
+<body></body>
+<script>
+  // ========================================
+  // Mapping: stimulus (kana) -> audio filename (romaji, no extension)
+  // ========================================
+  const stimulusToRomaji = {
+    'し':'shi', 'ち':'chi', 'ひ':'hi', 'に':'ni', 'ぎ':'gi', 'じ':'ji', 'き':'ki', 'り':'ri', 'み':'mi', 'び':'bi', 'ぴ':'pi',
+    'きゃ':'kya', 'きゅ':'kyu', 'きょ':'kyo',
+    'ぎゃ':'gya', 'ぎゅ':'gyu', 'ぎょ':'gyo',
+    'しゃ':'sha', 'しゅ':'shu', 'しょ':'sho',
+    'じゃ':'ja', 'じゅ':'ju', 'じょ':'jo',
+    'ちゃ':'cha', 'ちゅ':'chu', 'ちょ':'cho',
+    'にゃ':'nya', 'にゅ':'nyu', 'にょ':'nyo',
+    'ひゃ':'hya', 'ひゅ':'hyu', 'ひょ':'hyo',
+    'ぴゃ':'pya', 'ぴゅ':'pyu', 'ぴょ':'pyo',
+    'びゃ':'bya', 'びゅ':'byu', 'びょ':'byo',
+    'みゃ':'mya', 'みゅ':'myu', 'みょ':'myo',
+    'りゃ':'rya', 'りゅ':'ryu', 'りょ':'ryo',
+    'か':'ka', 'た':'ta'
+  };
+
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYHlkCLsRIJifCDTMFdmLwXyz9PC31ReUz-RxWbasI3ywEVrn_LF9AKzWx-5bp6sXi0Q/exec';
+  const SHEET_ID = '1QNbIit_mmA-hdWUTdMOK7j_7JMsjWXnWGNrH9amUNF8';
+  const PENDING_SUBMISSIONS_KEY = 'palatalizedsoundtest_pending_submissions';
+
+  function createSubmissionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+
+    return 'submission-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function readPendingSubmissions() {
+    try {
+      const raw = localStorage.getItem(PENDING_SUBMISSIONS_KEY);
+      if (!raw) return [];
+
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error('Unable to read pending submissions:', error);
+      return [];
+    }
+  }
+
+  function writePendingSubmissions(items) {
+    try {
+      localStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error('Unable to persist pending submissions:', error);
+    }
+  }
+
+  function queueSubmission(payload) {
+    const items = readPendingSubmissions();
+    const existingIndex = items.findIndex(item => item.submissionId === payload.submission_id);
+    const entry = {
+      submissionId: payload.submission_id,
+      payload,
+      queuedAt: new Date().toISOString(),
+      attempts: existingIndex >= 0 ? items[existingIndex].attempts || 0 : 0,
+      lastError: existingIndex >= 0 ? items[existingIndex].lastError || '' : ''
+    };
+
+    if (existingIndex >= 0) {
+      items[existingIndex] = entry;
+    } else {
+      items.push(entry);
+    }
+
+    writePendingSubmissions(items);
+  }
+
+  function updateQueuedSubmission(submissionId, updates) {
+    const items = readPendingSubmissions();
+    const index = items.findIndex(item => item.submissionId === submissionId);
+    if (index === -1) return;
+
+    items[index] = {
+      ...items[index],
+      ...updates
+    };
+    writePendingSubmissions(items);
+  }
+
+  function removeQueuedSubmission(submissionId) {
+    const items = readPendingSubmissions().filter(item => item.submissionId !== submissionId);
+    writePendingSubmissions(items);
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function postSubmission(payload) {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload),
+      keepalive: true
+    });
+
+    const responseText = await response.text();
+    let result = {};
+
+    if (responseText) {
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`HTTP ${response.status} ${response.statusText} | Invalid JSON response: ${responseText}`);
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText} | ${result.error || responseText || 'Request failed'}`);
+    }
+
+    if (result.success === false) {
+      throw new Error(result.error || 'Google Apps Script returned success=false');
+    }
+
+    return { response, result, responseText };
+  }
+
+  async function submitWithRetry(payload, maxAttempts, retryDelayMs) {
+    let attempt = 0;
+    let lastError = null;
+
+    while (attempt < maxAttempts) {
+      attempt += 1;
+      updateQueuedSubmission(payload.submission_id, {
+        attempts: attempt,
+        lastError: ''
+      });
+
+      try {
+        return await postSubmission(payload);
+      } catch (error) {
+        lastError = error;
+        updateQueuedSubmission(payload.submission_id, {
+          attempts: attempt,
+          lastError: error.message,
+          lastAttemptAt: new Date().toISOString()
+        });
+
+        if (attempt < maxAttempts) {
+          await delay(retryDelayMs);
+        }
+      }
+    }
+
+    throw lastError || new Error('Submission failed');
+  }
+
+  async function flushPendingSubmissions() {
+    const pending = readPendingSubmissions();
+    if (pending.length === 0) return;
+
+    for (const entry of pending) {
+      try {
+        const result = await submitWithRetry(entry.payload, 2, 1500);
+        console.log('Retried pending submission successfully:', {
+          submissionId: entry.submissionId,
+          status: result.response.status,
+          result: result.result
+        });
+        removeQueuedSubmission(entry.submissionId);
+      } catch (error) {
+        console.error('Pending submission still failing:', entry.submissionId, error);
+      }
+    }
+  }
+
+  flushPendingSubmissions();
+
+  // ========================================
+  // ขั้นตอนที่ 1: เริ่มต้น jsPsych และตั้งค่าการส่งผลการทดลองไปยัง Google Sheets
+  // ========================================
+  const jsPsych = initJsPsych({
+    on_finish: function() {
+      const allData = jsPsych.data.get().values();
+      const responseRows = allData.filter(r => r.task === 'response');
+      
+      // ===================== ลำดับเสียง 44 ข้อ (ตามที่ user ระบุ) =====================
+      const stimulusOrder = [
+        'し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ',
+        'きゃ','きゅ','きょ','ぎゃ','ぎゅ','ぎょ',
+        'しゃ','しゅ','しょ','じゃ','じゅ','じょ',
+        'ちゃ','ちゅ','ちょ','にゃ','にゅ','にょ',
+        'ひゃ','ひゅ','ひょ','ぴゃ','ぴゅ','ぴょ',
+        'びゃ','びゅ','びょ','みゃ','みゅ','みょ',
+        'りゃ','りゅ','りょ'
+      ];
+      
+      const tanOnList = ['し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ'];
+      
+      // ===================== ดึงข้อมูลพื้นฐาน =====================
+      const preFormData = allData.find(r => r.task === 'pre_survey_form') || {};
+      const studyYear = preFormData.study_year || '';
+      const studyMonth = preFormData.study_month || '';
+      const stayYear = preFormData.stay_year || '';
+      const stayMonth = preFormData.stay_month || '';
+      const email = preFormData.email || '';
+      
+      const preChoiceData = allData.find(r => r.task === 'pre_survey_choice') || {};
+      let pronExperience = '';
+      if (preChoiceData.response) {
+        let resp = preChoiceData.response;
+        if (typeof resp === 'string') {
+          try { resp = JSON.parse(resp); } catch(e) {}
+        }
+        if (Array.isArray(resp)) {
+          pronExperience = resp[0] || '';
+        } else if (resp && typeof resp === 'object') {
+          pronExperience = Object.values(resp)[0] || '';
+        } else {
+          pronExperience = resp;
+        }
+      }
+      
+      const preInstData = allData.find(r => r.task === 'pre_survey_institution') || {};
+      let institution = '';
+      if (preInstData.response) {
+        let resp = preInstData.response;
+        if (typeof resp === 'string') {
+          try { resp = JSON.parse(resp); } catch(e) {}
+        }
+        if (resp && typeof resp === 'object') {
+          institution = resp.institution || '';
+        } else {
+          institution = resp || '';
+        }
+      }
+
+      // ===================== สร้าง map สำหรับ stimulus -> trial data =====================
+      const trialMap = {};
+      responseRows.forEach(d => {
+        trialMap[d.stimulus] = d;
+      });
+
+      // ===================== สร้าง result row (1 row ต่อ 1 participant) =====================
+      const resultRow = {
+        'Email': email,
+        'ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (ปี)': studyYear,
+        'ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (เดือน)': studyMonth,
+        'ระยะเวลาการพำนักที่ญี่ปุ่นรวม (ปี)': stayYear,
+        'ระยะเวลาการพำนักที่ญี่ปุ่นรวม (เดือน)': stayMonth,
+        'ประสบการณ์การเรียนการออกเสียง': pronExperience,
+        'สถาบัน': institution,
+      };
+
+      let totalTanOn = 0;
+      let totalYoOn = 0;
+      let totalRT = 0;
+      let countRT = 0;
+
+      // ===================== สร้างคอลัมน์ Result และ RT สำหรับแต่ละ stimulus =====================
+      stimulusOrder.forEach(stim => {
+        const trial = trialMap[stim];
+        if (!trial) {
+          resultRow[`Result_${stim}`] = '';
+          resultRow[`RT_${stim}`] = '';
+          return;
+        }
+
+        const correct = trial.correct === true || trial.correct === 'true';
+        const chosenChoice = trial.chosen_choice || '';
+        const rt = trial.rt || 0;
+
+        let resultStr;
+        if (correct) {
+          resultStr = 'T';
+          if (tanOnList.includes(stim)) totalTanOn++;
+          else totalYoOn++;
+        } else {
+          // ถ้าตอบผิด ให้ดึง "other_sound" จาก other_text trial ที่ใกล้เคียง
+          let otherText = '';
+          if (chosenChoice && chosenChoice.includes('他')) {
+            const otherTrial = allData.find(d =>
+              d.task === 'other_text' &&
+              Math.abs((d.time_elapsed || 0) - (trial.time_elapsed || 0)) < 15000
+            );
+            otherText = otherTrial && otherTrial.other_sound ? otherTrial.other_sound : chosenChoice;
+            resultStr = `F(他-${otherText})`;
+          } else {
+            resultStr = `F(${chosenChoice})`;
+          }
+        }
+
+        resultRow[`Result_${stim}`] = resultStr;
+        resultRow[`RT_${stim}`] = rt;
+
+        if (rt > 0) {
+          totalRT += rt;
+          countRT++;
+        }
+      });
+
+      // ===================== เพิ่มสรุป Total Scores =====================
+      resultRow['Total Tan-on Score'] = totalTanOn;
+      resultRow['Total Yo-on Score'] = totalYoOn;
+      resultRow['Average Response Time (ms)'] = countRT > 0 ? Math.round(totalRT / countRT) : 0;
+
+      // ===================== Download CSV =====================
+      const headers = Object.keys(resultRow);
+      const csvRows = [
+        headers.map(h => `"${h}"`).join(','),
+        headers.map(h => {
+          const value = resultRow[h];
+          return `"${value !== null && value !== undefined ? String(value).replace(/"/g, '""') : ''}"`;
+        }).join(',')
+      ];
+      const csvContent = '\uFEFF' + csvRows.join('\n');
+
+      const downloadCsv = () => {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'ResultPattern.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+
+      // ===================== แสดงผลในหน้าจอ =====================
+      const tanOnCorrect = responseRows.filter(r => tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
+      const yoOnCorrect = responseRows.filter(r => !tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
+      
+      const displayText = `
+════════════════════════════════════════════════════════
+                    ผลการทดสอบ / テスト結果
+════════════════════════════════════════════════════════
+
+【ข้อมูลพื้นฐาน】
+- Email: ${email}
+- ปีเรียนญี่ปุ่น: ${studyYear}
+- เดือนเรียนญี่ปุ่น: ${studyMonth}
+- ปีอาศัยญี่ปุ่น: ${stayYear}
+- เดือนอาศัยญี่ปุ่น: ${stayMonth}
+- ประสบการณ์การเรียนการออกเสียง: ${pronExperience}
+- สถาบัน: ${institution}
+
+【ผลสรุป】
+- ตอบถูก Tan-on (単音): ${tanOnCorrect}/11
+- ตอบถูก Yo-on (拗音): ${yoOnCorrect}/33
+- รวมตอบถูก: ${tanOnCorrect + yoOnCorrect}/44
+
+════════════════════════════════════════════════════════
+      ข้อมูลกำลังส่งไปยัง Google Sheets และดาวน์โหลด...
+════════════════════════════════════════════════════════
+`;
+      
+      console.log(displayText);
+
+      // ===================== ส่งข้อมูลไปยัง Google Apps Script =====================
+      const submissionId = createSubmissionId();
+
+      // สร้าง detailed rows สำหรับ Google Sheets
+      const detailedRows = [];
+      stimulusOrder.forEach((stim, index) => {
+        const trial = trialMap[stim];
+        if (trial) {
+          detailedRows.push({
+            submission_id: submissionId,
+            Email: email,
+            stimulus_order: index + 1,
+            stimulus: stim,
+            correct_response: trial.correct_response,
+            response: trial.chosen_choice || 'n/a',
+            is_correct: trial.correct === true || trial.correct === 'true' ? 'TRUE' : 'FALSE',
+            reaction_time_ms: trial.rt || 'n/a'
+          });
+        }
+      });
+
+      resultRow['submission_id'] = submissionId;
+      resultRow['submitted_at'] = new Date().toISOString();
+
+      const payload = {
+        submission_id: submissionId,
+        respondent_data: resultRow,
+        detailed_results: detailedRows,
+        sheetId: SHEET_ID
+      };
+
+      queueSubmission(payload);
+
+      submitWithRetry(payload, 3, 2000)
+      .then(({ response, result, responseText }) => {
+        console.log('Google Sheets response:', {
+          status: response.status,
+          result,
+          responseText
+        });
+
+        removeQueuedSubmission(submissionId);
+        downloadCsv();
+
+        if (result.success) {
+          alert('✓ ข้อมูลถูกส่งไปยัง Google Sheets เรียบร้อยแล้ว!\n\nHTTP Status: ' + response.status + '\n\nข้อมูล (ResultPattern.csv) ยังได้ดาวน์โหลดไปยังโฟลเดอร์ Downloads ของท่าน\n\n✓ Data sent to Google Sheets successfully!\n\nFile (ResultPattern.csv) also downloaded to your Downloads folder.');
+        } else {
+          alert('⚠️ เกิดข้อผิดพลาดในการส่งไปยัง Google Sheets\n\nHTTP Status: ' + response.status + '\nรายละเอียด: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
+        }
+      })
+      .catch(error => {
+        console.error('Error sending to Google Sheets:', error);
+        downloadCsv();
+        alert('⚠️ ข้อผิดพลาดในการส่งไปยัง Google Sheets\n\nรายละเอียด: ' + error.message + '\n\nข้อมูลถูกเก็บไว้ในอุปกรณ์นี้แล้ว และระบบจะลองส่งใหม่อัตโนมัติเมื่อเปิดหน้าแบบทดสอบอีกครั้ง\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
+      });
+    }
+  });
+
+  // ========================================
+  // สร้าง timeline array เพื่อเก็บขั้นตอนทั้งหมดของการทดลอง
+  // ========================================
+  const timeline = [];
+
+  // ========================================
+  // ขั้นตอนที่ 2: หน้าแรก - ชื่องานวิจัย และหมายเหตุเกี่ยวกับความเป็นส่วนตัว
+  // ========================================
+  const titleAndNotice = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align: center; padding: 30px 20px;">
+        <h1 style="font-size: 18px; line-height: 1.8; margin: 0 0 20px 0;">
+          在日タイ語母語話者におけるイ段音（単音／拗音）<br>の口蓋化子音の聴取困難<br>
+          <span style="font-size: 16px; font-weight: normal;">— 大規模横断調査による要因分析と教育への示唆 —</span><br>
+          <span style="font-size: 14px; font-weight: normal; color: #aaa; margin-top: 10px; display: block;">ปัญหาการแยกแยะเสียงพยัญชนะเพดานแข็ง (เสียงเดี่ยว/เสียงควบ)<br>ของผู้พูดภาษาไทยเป็นภาษาแม่ที่อาศัยในญี่ปุ่น<br>— การวิเคราะห์ปัจจัยผ่านการสำรวจขนาดใหญ่ และการให้ข้อเสนอแนะทางการศึกษา —</span>
+        </h1>
+        
+        <div style="background: #333; color: #fff; padding: 20px; border: 1px solid #666; border-radius: 5px; text-align: center; font-size: 14px; line-height: 1.6; margin-top: 20px;">
+          <strong>重要な注記 / หมายเหตุสำคัญ:</strong><br>
+          本調査は研究目的でのデータ収集のみを目的としています。ご提供いただいたデータは機密として保管され、個人を特定できる情報を含まない概要形式で提示されます。<br>
+          研究への参加は自由意思で決定でき、途中で中断・撤回できること、中断・撤回してもなんら不利益を被りません。<br>
+          ご提供いただいたデータは本研究に使用され、学会で発表されます。<br>
+          <br>
+          การสำรวจครั้งนี้มีวัตถุประสงค์เพื่อเก็บรวบรวมข้อมูลสำหรับการศึกษาวิจัยเท่านั้น ข้อมูลที่ท่านให้จะถูกเก็บไว้เป็นความลับ และนำเสนอในรูปแบบภาพรวมโดยไม่มีการระบุข้อมูลที่สามารถระบุตัวตนของท่านได้<br>
+          การเข้าร่วมการศึกษานี้เป็นไปตามความสมัครใจของคุณ คุณสามารถหยุดหรือถอนตัวได้ตลอดเวลา และการหยุดหรือถอนตัวจะไม่ก่อให้เกิดผลเสียใด ๆ<br>
+          ข้อมูลของท่านจะถูกใช้ในงานวิจัยนี้ และจะถูกนำเสนอในที่ประชุมทางวิชาการ<br>
+          <br>
+          <strong>ご質問やお問い合わせ / ติดต่อผู้วิจัย:</strong><br>
+          (+81)070-9192-6459 / u548378a@ecs.osaka-u.ac.jp<br>
+          ケハナン アカラポン (Akarapong Kehanan)<br>
+          大阪大学大学院 人文学研究科 博士後期課程
+        </div>
+      </div>
+    `,
+    choices: ['同意する / ยินยอม', '同意しません / ไม่ยินยอม'],
+    button_html: '<button class="jspsych-btn" style="min-width: 150px; margin: 12px;">%choice%</button>',
+    data: { task: 'title_and_notice' },
+    on_finish: function(data) {
+      data.consent = data.response === 0; // 0 = ยินยอม, 1 = ไม่ยินยอม
+    }
+  };
+
+  // ========================================
+  // หน้าแสดงเมื่อผู้เข้าร่วมไม่ยินยอม
+  // ========================================
+  const consentRefusal = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align: center; padding: 30px 20px;">
+        <h1 style="font-size: 24px; margin: 0 0 20px 0; color: #ff6b6b;">
+          申し訳ございません / ขออภัย
+        </h1>
+        <div style="background: #333; color: #fff; padding: 20px; border: 1px solid #ff6b6b; border-radius: 5px; text-align: center; font-size: 14px; line-height: 1.8; margin-top: 20px;">
+          <p style="margin: 10px 0;">
+            <strong>同意していただけなかったため、本調査は終了いたします。</strong><br>
+            ご協力いただき、ありがとうございました。
+          </p>
+          <p style="margin: 10px 0;">
+            <strong>ท่านไม่ยินยอมในการเข้าร่วมการวิจัย จึงขอสิ้นสุดการสำรวจนี้</strong><br>
+            ขอบคุณสำหรับความเสียสละเวลาของท่าน
+          </p>
+        </div>
+      </div>
+    `,
+    choices: ['ตกลง / 了解'],
+    button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+  };
+
+  // ========================================
+  // ขั้นตอนที่ 3: แบบสอบถามเกี่ยวกับประสบการณ์การเรียนการออกเสียง
+  // ========================================
+  const preSurveyChoice = {
+    type: jsPsychSurveyMultiChoice,
+    questions: [
+      {
+        prompt: '発音学習経験はありますか？\n<div style="margin-top:6px;color:#ccc;font-size:0.9em">คุณเคยเรียนการออกเสียงแบบเป็นระบบหรือไม่ (มี/ไม่มี)</div>',
+        name: 'pron_experience',
+        options: ['無', '有'],
+        required: true
+      }
+    ],
+    data: { task: 'pre_survey_choice' }
+  };
+
+  // ========================================
+  // ขั้นตอนที่ 4: แบบสอบถามส่วนที่ 1
+  // ========================================
+  const preSurveyForm = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function() {
+      let yearOptions = '<option value="">กรุณาเลือก / 選択してください</option>';
+      for (let i = 0; i <= 50; i++) { yearOptions += `<option value="${i}">${i} 年/ปี</option>`; }
+      let monthOptions = '<option value="">กรุณาเลือก / 選択してください</option>';
+      for (let m = 0; m <= 12; m++) { monthOptions += `<option value="${m}">${m} ヶ月/เดือน</option>`; }
+      monthOptions += '<option value="3">ไม่แน่ใจ (ประมาณ0-6เดือน) / 不確定(約0-6か月)</option>';
+      monthOptions += '<option value="9">ไม่แน่ใจ (ประมาณ6-12เดือน) / 不確定(約6-12か月)</option>';
+
+      return `
+        <div style="color:#fff">
+          <label><strong>学習期間（累積）はどのくらいですか？</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (ปี/เดือน)</div>
+          <div style="margin:8px 0">
+            <select id="study_year">${yearOptions}</select>
+            <select id="study_month">${monthOptions}</select>
+          </div>
+
+          <label><strong>滞在期間（合計）はどのくらいですか？</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">ระยะเวลาการพำนักที่ประเทศญี่ปุ่นรวม (ปี และ เดือน)</div>
+          <div style="margin:8px 0">
+            <select id="stay_year">${yearOptions}</select>
+            <select id="stay_month">${monthOptions}</select>
+          </div>
+
+          <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">กรุณากรอกอีเมล (@ และ . ถูกใส่ไว้ให้แล้ว)<br>
+          必須ではありません。このメールアドレスの個人情報は、研究が完了するまで (3年以内) 安全ななデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
+          ไม่จำเป็นต้องใส่ ข้อมูลส่วนตัวในช่องอีเมลนี้จะถูกเก็บไว้จนกว่างานวิจัยจะเสร็จสมบูรณ์ (ไม่เกิน 3 ปี) ใน database ที่ปลอดภัย และจะใช้สำหรับการติดต่อกลับในกรณีฉุกเฉินเท่านั้น</div>
+          <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
+            <input id="email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+            <span>@</span>
+            <input id="email_domain" type="text" placeholder="example" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+            <span>.</span>
+            <input id="email_tld" type="text" placeholder="com" style="width:80px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+          </div>
+          
+          <button id="preSurveyFormBtn" style="margin-top:20px; padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Continue</button>
+          <div id="validationError" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+        </div>
+      `;
+    },
+    choices: [],
+    data: { task: 'pre_survey_form' },
+    on_load: function() {
+      const btn = document.getElementById('preSurveyFormBtn');
+      btn.addEventListener('click', function() {
+        const study_year = document.getElementById('study_year')?.value || '';
+        const study_month = document.getElementById('study_month')?.value || '';
+        const stay_year = document.getElementById('stay_year')?.value || '';
+        const stay_month = document.getElementById('stay_month')?.value || '';
+        
+        if (!study_year || !study_month || !stay_year || !stay_month) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'กรุณาเลือกระยะเวลาให้ครบถ้วน\n選択を完了してください';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        
+        const user = document.getElementById('email_user')?.value || '';
+        const domain = document.getElementById('email_domain')?.value || '';
+        const tld = document.getElementById('email_tld')?.value || '';
+        const email = (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
+        jsPsych.data.write({ task: 'pre_survey_form', study_year, study_month, stay_year, stay_month, email });
+        jsPsych.finishTrial();
+      });
+    }
+  };
+
+  // ========================================
+  // ขั้นตอนที่ 5: แบบสอบถามส่วนที่ 2 (แบบมีเงื่อนไข)
+  // ========================================
+  const institutionTrial = {
+    type: jsPsychSurveyText,
+    questions: [
+      {
+        prompt: 'ท่านเคยเรียนการออกเสียงภาษาญี่ปุ่นในสถาบันใด ๆ หรือไม่ (ถ้ามี โปรดระบุชื่อสถาบัน)<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
+        name: 'institution',
+        placeholder: '受講した場合は機関名を入力',
+        required: false
+      }
+    ],
+    data: { task: 'pre_survey_institution' }
+  };
+
+  // ========================================
+  // ขั้นตอนที่ 6: คำแนะนำการทดลอง
+  // ========================================
+  const instructions = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
+        <h2 style="text-align: center;">ยินดีต้อนรับ / ようこそ</h2>
+        
+        <h3 style="color: #aaa; margin-top: 25px;">【ไทย】</h3>
+        <p>การทดสอบนี้เป็นแบบทดสอบการแยกแยะเสียงภาษาญี่ปุ่น จำนวนข้อทั้งหมด <strong>44 ข้อ</strong></p>
+        <p>ในแต่ละข้อ จะมีเสียงเล่นให้ฟังหนึ่งครั้ง แล้วให้เลือกคำตอบที่ตรงกับเสียงนั้นจากห้าตัวเลือก</p>
+        <p>ก่อนเริ่มการทดสอบจริง จะมีคำถามตัวอย่าง (demo) <strong>2 ข้อ</strong> เพื่อให้คุ้นเคยกับรูปแบบ โดยข้อทดลองเหล่านี้ไม่ถูกนำไปคำนวณคะแนน</p>
+        <p>ระบบจะสุ่มลำดับตัวเลือกในแต่ละข้อโดยอัตโนมัติ</p>
+        <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
+          <strong>📌 ข้อสำคัญ:</strong> ท่านสามารถเลือกคำตอบเดียวกันซ้ำในหลายข้อได้ หากได้ยินเสียงที่เหมือนกัน<br>
+          <span style="color: #ccc; font-size: 0.92em;">เช่น หากได้ยิน sha ในข้อที่ 1 และฟังแล้วรู้สึกว่าข้อที่ 2 ก็เป็น sha เช่นกัน สามารถเลือก sha ซ้ำได้</span>
+        </p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ โปรดตอบให้เร็วที่สุดตามธรรมชาติ</strong> โดยไม่จำเป็นต้องคิดนาน เพื่อให้ได้ผลลัพธ์ที่แม่นยำที่สุด (ไม่มีการจำกัดเวลา)</p>
+        
+        <h3 style="color: #aaa; margin-top: 25px;">【日本語】</h3>
+        <p>本調査は日本語音声の聴覚識別テストです。全部で <strong>44 問</strong>あります。</p>
+        <p>各問題では音声が1回再生されます。聞こえた音に最も近い選択肢を5つの中から1つ選んでください。</p>
+        <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点に含まれませんが、本番と同じ要領で回答してください。</p>
+        <p>各問題における選択肢の順序は、毎回ランダムに入れ替わります。</p>
+        <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
+          <strong>📌 重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
+          <span style="color: #ccc; font-size: 0.92em;">例えば、問1で「sha」と答えた場合でも、問2でも「sha」に聞こえた場合は、同じく「sha」を選んでいただいても構いません。</span>
+        </p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ なるべく自然なスピードで、直感的にお答えください</strong>（時間制限はありません）</p>
+      </div>
+    `,
+    choices: ['เริ่มต้น / 開始'],
+    button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+  };
+  timeline.push(titleAndNotice);
+  
+  const conditionalConsent = {
+    timeline: [consentRefusal],
+    conditional_function: function() {
+      const last = jsPsych.data.get().last(1).values()[0];
+      return !last.consent;
+    }
+  };
+  timeline.push(conditionalConsent);
+  
+  timeline.push(preSurveyForm);
+  timeline.push(preSurveyChoice);
+  const conditionalInstitution = {
+    timeline: [institutionTrial],
+    conditional_function: function() {
+      const last = jsPsych.data.get().last(1).values()[0];
+      let resp = last.response || last.responses;
+      if (typeof resp === 'string') {
+        try { resp = JSON.parse(resp); } catch(e) {}
+      }
+      if (Array.isArray(resp)) return resp.includes('有');
+      if (resp && typeof resp === 'object') return Object.values(resp).indexOf('有') !== -1 || Object.values(resp).some(v=>v==='有');
+      return resp === '有';
+    }
+  };
+  timeline.push(conditionalInstitution);
+  timeline.push(instructions);
+
+  // ========================================
+  // ขั้นตอนที่ 7: ข้อมูลการทดลอง (ตัวอักษร 44 ข้อ)
+  // ========================================
+  const trials = [
+    { stimulus: 'し', choices: ['し (shi)', 'ち (chi)', 'ひ (hi)', 'き (ki)', '他(other)'], correct_response: 'し (shi)' },
+    { stimulus: 'ち', choices: ['ち (chi)', 'し (shi)', 'じ (ji)', 'き (ki)', '他(other)'], correct_response: 'ち (chi)' },
+    { stimulus: 'ひ', choices: ['ひ (hi)', 'し (shi)', 'き (ki)', 'ち (chi)', '他(other)'], correct_response: 'ひ (hi)' },
+    { stimulus: 'に', choices: ['に (ni)', 'ぎ (gi)', 'り (ri)', 'み (mi)', '他(other)'], correct_response: 'に (ni)' },
+    { stimulus: 'ぎ', choices: ['ぎ (gi)', 'に (ni)', 'き (ki)', 'じ (ji)', '他(other)'], correct_response: 'ぎ (gi)' },
+    { stimulus: 'じ', choices: ['じ (ji)', 'ち (chi)', 'し (shi)', 'ぎ (gi)', '他(other)'], correct_response: 'じ (ji)' },
+    { stimulus: 'き', choices: ['き (ki)', 'ぎ (gi)', 'ち (chi)', 'し (shi)', '他(other)'], correct_response: 'き (ki)' },
+    { stimulus: 'り', choices: ['り (ri)', 'に (ni)', 'じ (ji)', 'ぎ (gi)', '他(other)'], correct_response: 'り (ri)' },
+    { stimulus: 'み', choices: ['み (mi)', 'び (bi)', 'に (ni)', 'ぴ (pi)', '他(other)'], correct_response: 'み (mi)' },
+    { stimulus: 'び', choices: ['び (bi)', 'ぴ (pi)', 'み (mi)', 'じ (ji)', '他(other)'], correct_response: 'び (bi)' },
+    { stimulus: 'ぴ', choices: ['ぴ (pi)', 'び (bi)', 'み (mi)', 'ひ (hi)', '他(other)'], correct_response: 'ぴ (pi)' },
+    { stimulus: 'きゃ', choices: ['きゃ (kya)', 'しゃ (sha)', 'ちゃ (cha)', 'か (ka)', '他(other)'], correct_response: 'きゃ (kya)' },
+    { stimulus: 'きゅ', choices: ['きゅ (kyu)', 'ひゅ (hyu)', 'ちゅ (chu)', 'く (ku)', '他(other)'], correct_response: 'きゅ (kyu)' },
+    { stimulus: 'きょ', choices: ['きょ (kyo)', 'ひょ (hyo)', 'ちょ (cho)', 'こ (ko)', '他(other)'], correct_response: 'きょ (kyo)' },
+    { stimulus: 'ぎゃ', choices: ['ぎゃ (gya)', 'じゃ (ja)', 'にゃ (nya)', 'が (ga)', '他(other)'], correct_response: 'ぎゃ (gya)' },
+    { stimulus: 'ぎゅ', choices: ['ぎゅ (gyu)', 'りゅ (ryu)', 'にゅ (nyu)', 'ぐ (gu)', '他(other)'], correct_response: 'ぎゅ (gyu)' },
+    { stimulus: 'ぎょ', choices: ['ぎょ (gyo)', 'じょ (jo)', 'にょ (nyo)', 'ご (go)', '他(other)'], correct_response: 'ぎょ (gyo)' },
+    { stimulus: 'しゃ', choices: ['しゃ (sha)', 'ちゃ (cha)', 'ひゃ (hya)', 'さ (sa)', '他(other)'], correct_response: 'しゃ (sha)' },
+    { stimulus: 'しゅ', choices: ['しゅ (shu)', 'ちゅ (chu)', 'ひゅ (hyu)', 'す (su)', '他(other)'], correct_response: 'しゅ (shu)' },
+    { stimulus: 'しょ', choices: ['しょ (sho)', 'ちょ (cho)', 'ひょ (hyo)', 'そ (so)', '他(other)'], correct_response: 'しょ (sho)' },
+    { stimulus: 'じゃ', choices: ['じゃ (ja)', 'ちゃ (cha)', 'しゃ (sha)', 'だ (da)', '他(other)'], correct_response: 'じゃ (ja)' },
+    { stimulus: 'じゅ', choices: ['じゅ (ju)', 'ちゅ (chu)', 'しゅ (shu)', 'づ (zu)', '他(other)'], correct_response: 'じゅ (ju)' },
+    { stimulus: 'じょ', choices: ['じょ (jo)', 'ちょ (cho)', 'しょ (sho)', 'ど (do)', '他(other)'], correct_response: 'じょ (jo)' },
+    { stimulus: 'ちゃ', choices: ['ちゃ (cha)', 'しゃ (sha)', 'じゃ (ja)', 'た (ta)', '他(other)'], correct_response: 'ちゃ (cha)' },
+    { stimulus: 'ちゅ', choices: ['ちゅ (chu)', 'しゅ (shu)', 'じゅ (ju)', 'つ (tsu)', '他(other)'], correct_response: 'ちゅ (chu)' },
+    { stimulus: 'ちょ', choices: ['ちょ (cho)', 'しょ (sho)', 'じょ (jo)', 'と (to)', '他(other)'], correct_response: 'ちょ (cho)' },
+    { stimulus: 'にゃ', choices: ['にゃ (nya)', 'ぎゃ (gya)', 'りゃ (rya)', 'な (na)', '他(other)'], correct_response: 'にゃ (nya)' },
+    { stimulus: 'にゅ', choices: ['にゅ (nyu)', 'ぎゅ (gyu)', 'りゅ (ryu)', 'ぬ (nu)', '他(other)'], correct_response: 'にゅ (nyu)' },
+    { stimulus: 'にょ', choices: ['にょ (nyo)', 'ぎょ (gyo)', 'りょ (ryo)', 'の (no)', '他(other)'], correct_response: 'にょ (nyo)' },
+    { stimulus: 'ひゃ', choices: ['ひゃ (hya)', 'しゃ (sha)', 'きゃ (kya)', 'は (ha)', '他(other)'], correct_response: 'ひゃ (hya)' },
+    { stimulus: 'ひゅ', choices: ['ひゅ (hyu)', 'しゅ (shu)', 'きゅ (kyu)', 'ふ (fu)', '他(other)'], correct_response: 'ひゅ (hyu)' },
+    { stimulus: 'ひょ', choices: ['ひょ (hyo)', 'しょ (sho)', 'きょ (kyo)', 'ほ (ho)', '他(other)'], correct_response: 'ひょ (hyo)' },
+    { stimulus: 'ぴゃ', choices: ['ぴゃ (pya)', 'びゃ (bya)', 'みゃ (mya)', 'ぱ (pa)', '他(other)'], correct_response: 'ぴゃ (pya)' },
+    { stimulus: 'ぴゅ', choices: ['ぴゅ (pyu)', 'びゅ (byu)', 'みゅ (myu)', 'ぷ (pu)', '他(other)'], correct_response: 'ぴゅ (pyu)' },
+    { stimulus: 'ぴょ', choices: ['ぴょ (pyo)', 'びょ (byo)', 'みょ (myo)', 'ぽ (po)', '他(other)'], correct_response: 'ぴょ (pyo)' },
+    { stimulus: 'びゃ', choices: ['びゃ (bya)', 'りゃ (rya)', 'みゃ (mya)', 'ば (ba)', '他(other)'], correct_response: 'びゃ (bya)' },
+    { stimulus: 'びゅ', choices: ['びゅ (byu)', 'ぴゅ (pyu)', 'みゅ (myu)', 'ぶ (bu)', '他(other)'], correct_response: 'びゅ (byu)' },
+    { stimulus: 'びょ', choices: ['びょ (byo)', 'ぴょ (pyo)', 'みょ (myo)', 'ぼ (bo)', '他(other)'], correct_response: 'びょ (byo)' },
+    { stimulus: 'みゃ', choices: ['みゃ (mya)', 'びゃ (bya)', 'にゃ (nya)', 'ま (ma)', '他(other)'], correct_response: 'みゃ (mya)' },
+    { stimulus: 'みゅ', choices: ['みゅ (myu)', 'びゅ (byu)', 'にゅ (nyu)', 'む (mu)', '他(other)'], correct_response: 'みゅ (myu)' },
+    { stimulus: 'みょ', choices: ['みょ (myo)', 'びょ (byo)', 'にょ (nyo)', 'も (mo)', '他(other)'], correct_response: 'みょ (myo)' },
+    { stimulus: 'りゃ', choices: ['りゃ (rya)', 'びゃ (bya)', 'だ (da)', 'ら (ra)', '他(other)'], correct_response: 'りゃ (rya)' },
+    { stimulus: 'りゅ', choices: ['りゅ (ryu)', 'にゅ (nyu)', 'ぎゅ (gyu)', 'る (ru)', '他(other)'], correct_response: 'りゅ (ryu)' },
+    { stimulus: 'りょ', choices: ['りょ (ryo)', 'にょ (nyo)', 'ど (do)', 'ろ (ro)', '他(other)'], correct_response: 'りょ (ryo)' }
+  ];
+
+  const dummyTrials = [
+    { stimulus: 'か', choices: ['か (ka)', 'さ (sa)', 'た (ta)', 'な (na)', '他(other)'], correct_response: 'か (ka)', task: 'dummy_response' },
+    { stimulus: 'た', choices: ['か (ka)', 'さ (sa)', 'た (ta)', 'な (na)', '他(other)'], correct_response: 'た (ta)', task: 'dummy_response' }
+  ];
+
+  const fixation = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: '<div style="font-size: 72px;">+</div>',
+    choices: [],
+    trial_duration: 500
+  };
+
+  // ========================================
+  // Trial ที่เล่นเสียงจริงจากโฟลเดอร์ audio/ (แทนที่ audioPlaceholder เดิม)
+  // ========================================
+  const audioTrial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: function() {
+      const stim = jsPsych.timelineVariable('stimulus');
+      const filename = stimulusToRomaji[stim];
+      return `
+        <audio id="stim-audio" autoplay>
+          <source src="audio/${filename}.mp3" type="audio/mpeg">
+        </audio>
+        <div style="font-size: 64px; margin: 24px 0;">🔊</div>
+      `;
+    },
+    choices: "NO_KEYS",
+    trial_duration: null,
+    on_load: function() {
+      const audioEl = document.getElementById('stim-audio');
+      if (audioEl) {
+        audioEl.onended = function() {
+          jsPsych.finishTrial();
+        };
+        audioEl.onerror = function() {
+          console.warn('Audio failed to load:', audioEl.currentSrc);
+          setTimeout(() => jsPsych.finishTrial(), 1000);
+        };
+      }
+    }
+  };
+
+  const responseTrial = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: '<p style="font-size:16px;">กรุณาเลือกคำตอบที่ตรงกับเสียงที่ท่านได้ยิน<br><span style="color:#aaa; font-size:14px;">聞こえた音に最も近い選択肢を選んでください</span></p>',
+    choices: jsPsych.timelineVariable('choices'),
+    button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
+    data: {
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      correct_response: jsPsych.timelineVariable('correct_response'),
+      task: jsPsych.timelineVariable('task')
+    },
+    on_start: function(trial) {
+      if (!trial.data) {
+        trial.data = {};
+      }
+      trial.data.task = trial.data.task || 'response';
+
+      if (trial.choices && Array.isArray(trial.choices)) {
+        const choices = trial.choices.slice();
+        const otherIndex = choices.findIndex(c => c && c.includes('他'));
+        if (otherIndex !== -1) {
+          const otherChoice = choices.splice(otherIndex, 1)[0];
+          trial.choices = jsPsych.randomization.shuffle(choices).concat([otherChoice]);
+        } else {
+          trial.choices = jsPsych.randomization.shuffle(choices);
+        }
+        trial.data.shuffled_choices = trial.choices.slice();
+      }
+    },
+    on_finish: function(data) {
+      const choiceIndex = data.response;
+      let selectedChoice = null;
+      
+      if (typeof choiceIndex === 'number' && data.shuffled_choices && data.shuffled_choices[choiceIndex]) {
+        selectedChoice = data.shuffled_choices[choiceIndex];
+      }
+      
+      data.chosen_choice = selectedChoice;
+      data.correct = selectedChoice === data.correct_response;
+    }
+  };
+
+  const otherTextTrial = {
+    type: jsPsychSurveyText,
+    questions: [
+      {
+        prompt: '<div style="margin-bottom: 15px;"><strong>ใส่เสียงที่ท่านได้ยินลงด้านล่างเป็นตัวอักษรโรมาจิ</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">เช่น di, ti, fi, ri เป็นต้น</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>หากได้ยินต่างจากที่คาดหมาย:</strong><br/>ถ้าได้ยิน "si" (ซิ) → ใส่ si<br/>ถ้าได้ยิน "ti" (ทิ) → ใส่ ti<br/>ถ้าได้ยิน "fi" (ฟิ) → ใส่ fi<br/><br/>補足：<br/>もし違う音に聞こえたら：si, ti, fi など入力してください</span></div>',
+        name: 'other_sound',
+        placeholder: 'พิมพ์เสียงโรมาจิ / ローマ字を入力',
+        required: true
+      }
+    ],
+    data: {
+      task: 'other_text'
+    },
+    on_finish: function(data) {
+      let responses = data.response;
+      if (typeof responses === 'string') {
+        try {
+          responses = JSON.parse(responses);
+        } catch (e) {
+          responses = {};
+        }
+      }
+      if (typeof responses === 'object' && responses !== null) {
+        data.other_sound = responses.other_sound || '';
+      } else {
+        data.other_sound = '';
+      }
+    }
+  };
+
+  const otherTextTimeline = {
+    timeline: [otherTextTrial],
+    conditional_function: function() {
+      const last = jsPsych.data.get().last(1).values()[0];
+      return last.chosen_choice && last.chosen_choice.includes('他');
+    }
+  };
+
+  const dummyIntro = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
+        <h2 style="text-align: center;">ข้อทดลองก่อนเริ่มจริง /練習問題</h2>
+        <p>ก่อนเริ่มการทดสอบจริง จะมี <strong>2 ข้อทดลอง</strong> เพื่อให้คุณคุ้นเคยกับรูปแบบข้อสอบ</p>
+        <p>ข้อทดลองทั้งสองข้อ <strong>จะไม่ถูกบันทึกในผลลัพธ์</strong> แต่ให้ตอบเหมือนข้อจริง</p>
+        <p>เมื่อพร้อมแล้ว กรุณากดปุ่มด้านล่างเพื่อเริ่มต้น</p>
+        <hr style="margin: 18px 0; border-color: rgba(255,255,255,0.2);"/>
+        <h3 style="color: #aaa;">【日本語】</h3>
+        <p>本番のテストの前に、<strong>2 問の練習問題</strong>があります。</p>
+        <p>練習問題の回答は採点・記録に含まれませんが、本番と同じ要領で回答してください。</p>
+        <p>準備ができましたら、下のボタンを押して練習を開始してください。</p>
+      </div>
+    `,
+    choices: ['เริ่มข้อทดลอง / 練習問題を始める'],
+    button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+  };
+
+  const dummyProcedure = {
+    timeline: [fixation, audioTrial, responseTrial, otherTextTimeline],
+    timeline_variables: dummyTrials,
+    randomize_order: false
+  };
+
+  const realStart = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
+        <h2 style="text-align: center;">เริ่มการทดสอบจริง / 本番テスト開始</h2>
+        <p>ตอนนี้จะเป็นส่วนของการทดสอบจริงทั้งหมด</p>
+        <p>จากนี้ไป คำตอบจะถูกบันทึกและนำมาคำนวณผลลัพธ์</p>
+        <p>これより本番のテストを開始いたします。これからの解答はすべて記録され、結果の算出に使用されます。</p>
+      </div>
+    `,
+    choices: ['เริ่มการทดสอบจริง / 本番テスト開始'],
+    button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+  };
+
+  const trialProcedure = {
+    timeline: [fixation, audioTrial, responseTrial, otherTextTimeline],
+    timeline_variables: trials,
+    randomize_order: true
+  };
+  timeline.push(dummyIntro);
+  timeline.push(dummyProcedure);
+  timeline.push(realStart);
+  timeline.push(trialProcedure);
+
+  const debrief = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <p>"ผู้วิจัยขอขอบพระคุณในความอนุเคราะห์และความเสียสละเวลาของท่านเป็นอย่างยิ่ง ข้อมูลของท่านเป็นประโยชน์อย่างยิ่งต่องานวิจัยชิ้นนี้ ขออวยพรให้ท่านประสบความสำเร็จในหน้าที่การงานและมีสุขภาพพลานามัยที่แข็งแรงสมบูรณ์"</p>
+      <p style="margin-top: 20px; color: #999;">「ご協力いただき、ありがとうございました。皆様の貴重なご意見は、本研究の遂行に大変役立たせていただきます。皆様のますますのご活躍とご健康をお祈りしております。」</p>
+      <div style="margin-top: 24px; padding: 16px 20px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 6px; font-size: 14px; line-height: 1.8; text-align: left;">
+        <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 หมายเหตุ / 備考</strong></p>
+        <p style="margin: 0 0 6px 0;">เมื่อกดปุ่มด้านล่าง <strong>ไฟล์ข้อมูลคำตอบ</strong> จะถูกดาวน์โหลดลงในเครื่องของท่านโดยอัตโนมัติ<br>
+        กรุณาเก็บไฟล์นี้ไว้ เผื่อในกรณีที่เซิร์ฟเวอร์หรืออินเตอร์เน็ตของท่านขัดข้อง ทางผู้วิจัยอาจติดต่อขอรับไฟล์ดังกล่าวภายหลัง<br>
+        ผ่านทางอีเมล: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
+        <hr style="border-color: rgba(255,255,255,0.15); margin: 10px 0;"/>
+        <p style="margin: 0; color: #ccc;">送信ボタンを押すと、<strong>回答データファイル（ResultPattern.csv）</strong>が自動的にダウンロードされます。<br>
+        サーバーやインターネット接続に問題が生じた場合に備え、このファイルを保管しておいてください。<br>
+        後日、研究者よりファイルの提供をお願いする場合がございます。<br>
+        連絡先: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
+      </div>
+    `,
+    choices: ['คลิกที่นี่เพื่อส่งข้อมูลไปยังเซิร์ฟเวอร์ / 回答データをサーバーに送信する'],
+    button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+  };
+  timeline.push(debrief);
+
+  jsPsych.run(timeline);
+</script>
+</html>
