@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>日本語音声聴覚識別調査 / การทดสอบการแยกแยะเสียงภาษาญี่ปุ่น</title>
+  <title>日本語音声聴覚識別調査 / Japanese Speech Perception Study</title>
   <script src="https://unpkg.com/jspsych@7.3.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
@@ -257,14 +257,14 @@
   flushPendingSubmissions();
 
   // ========================================
-  // ขั้นตอนที่ 1: เริ่มต้น jsPsych และตั้งค่าการส่งผลการทดลองไปยัง Google Sheets
+  // Step 1: Initialize jsPsych and configure result submission to Google Sheets.
   // ========================================
   const jsPsych = initJsPsych({
     on_finish: function() {
       const allData = jsPsych.data.get().values();
       const responseRows = allData.filter(r => r.task === 'response');
       
-      // ===================== ลำดับเสียง 44 ข้อ (ตามที่ user ระบุ) =====================
+      // ===================== Fixed 44-item stimulus order =====================
       const stimulusOrder = [
         'し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ',
         'きゃ','きゅ','きょ','ぎゃ','ぎゅ','ぎょ',
@@ -277,12 +277,13 @@
       
       const tanOnList = ['し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ'];
       
-      // ===================== ดึงข้อมูลพื้นฐาน =====================
+      // ===================== Collect base participant data =====================
       const preFormData = allData.find(r => r.task === 'pre_survey_form') || {};
       const studyYear = preFormData.study_year || '';
       const studyMonth = preFormData.study_month || '';
       const stayYear = preFormData.stay_year || '';
       const stayMonth = preFormData.stay_month || '';
+      const nativeLanguage = preFormData.native_language || '';
       const email = preFormData.email || '';
       
       const preChoiceData = allData.find(r => r.task === 'pre_survey_choice') || {};
@@ -315,21 +316,22 @@
         }
       }
 
-      // ===================== สร้าง map สำหรับ stimulus -> trial data =====================
+      // ===================== Build map for stimulus -> trial data =====================
       const trialMap = {};
       responseRows.forEach(d => {
         trialMap[d.stimulus] = d;
       });
 
-      // ===================== สร้าง result row (1 row ต่อ 1 participant) =====================
+      // ===================== Build result row (one row per participant) =====================
       const resultRow = {
         'Email': email,
-        'ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (ปี)': studyYear,
-        'ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (เดือน)': studyMonth,
-        'ระยะเวลาการพำนักที่ญี่ปุ่นรวม (ปี)': stayYear,
-        'ระยะเวลาการพำนักที่ญี่ปุ่นรวม (เดือน)': stayMonth,
-        'ประสบการณ์การเรียนการออกเสียง': pronExperience,
-        'สถาบัน': institution,
+        '母語 / Native language': nativeLanguage,
+        '日本語学習期間（年） / JP learning years': studyYear,
+        '日本語学習期間（月） / JP learning months': studyMonth,
+        '日本滞在期間（年） / Years lived in Japan': stayYear,
+        '日本滞在期間（月） / Months lived in Japan': stayMonth,
+        '発音学習経験 / Pronunciation learning experience': pronExperience,
+        '受講機関 / Institution': institution,
       };
 
       let totalTanOn = 0;
@@ -337,7 +339,7 @@
       let totalRT = 0;
       let countRT = 0;
 
-      // ===================== สร้างคอลัมน์ Result และ RT สำหรับแต่ละ stimulus =====================
+      // ===================== Build Result and RT columns for each stimulus =====================
       stimulusOrder.forEach(stim => {
         const trial = trialMap[stim];
         if (!trial) {
@@ -356,7 +358,7 @@
           if (tanOnList.includes(stim)) totalTanOn++;
           else totalYoOn++;
         } else {
-          // ถ้าตอบผิด ให้ดึง "other_sound" จาก other_text trial ที่ใกล้เคียง
+          // If incorrect, pull "other_sound" from a nearby other_text trial.
           let otherText = '';
           if (chosenChoice && chosenChoice.includes('他')) {
             const otherTrial = allData.find(d =>
@@ -379,7 +381,7 @@
         }
       });
 
-      // ===================== เพิ่มสรุป Total Scores =====================
+      // ===================== Add total score summary =====================
       resultRow['Total Tan-on Score'] = totalTanOn;
       resultRow['Total Yo-on Score'] = totalYoOn;
       resultRow['Average Response Time (ms)'] = countRT > 0 ? Math.round(totalRT / countRT) : 0;
@@ -408,45 +410,47 @@
         URL.revokeObjectURL(url);
       };
 
-      // ===================== แสดงผลในหน้าจอ =====================
+      // ===================== Show summary text =====================
       const tanOnCorrect = responseRows.filter(r => tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
       const yoOnCorrect = responseRows.filter(r => !tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
       
       const displayText = `
-════════════════════════════════════════════════════════
-                    ผลการทดสอบ / テスト結果
-════════════════════════════════════════════════════════
+    ════════════════════════════════════════════════════════
+               テスト結果 / Test Results
+    ════════════════════════════════════════════════════════
 
-【ข้อมูลพื้นฐาน】
-- Email: ${email}
-- ปีเรียนญี่ปุ่น: ${studyYear}
-- เดือนเรียนญี่ปุ่น: ${studyMonth}
-- ปีอาศัยญี่ปุ่น: ${stayYear}
-- เดือนอาศัยญี่ปุ่น: ${stayMonth}
-- ประสบการณ์การเรียนการออกเสียง: ${pronExperience}
-- สถาบัน: ${institution}
+    【基本情報 / Basic Information】
+    - Email: ${email}
+    - 母語 / Native language: ${nativeLanguage}
+    - 日本語学習（年）: ${studyYear}
+    - 日本語学習（月）: ${studyMonth}
+    - 日本滞在（年）: ${stayYear}
+    - 日本滞在（月）: ${stayMonth}
+    - 発音学習経験: ${pronExperience}
+    - 受講機関: ${institution}
 
-【ผลสรุป】
-- ตอบถูก Tan-on (単音): ${tanOnCorrect}/11
-- ตอบถูก Yo-on (拗音): ${yoOnCorrect}/33
-- รวมตอบถูก: ${tanOnCorrect + yoOnCorrect}/44
+    【集計 / Summary】
+    - Tan-on (単音) correct: ${tanOnCorrect}/11
+    - Yo-on (拗音) correct: ${yoOnCorrect}/33
+    - Total correct: ${tanOnCorrect + yoOnCorrect}/44
 
-════════════════════════════════════════════════════════
-      ข้อมูลกำลังส่งไปยัง Google Sheets และดาวน์โหลด...
-════════════════════════════════════════════════════════
-`;
+    ════════════════════════════════════════════════════════
+      Sending to Google Sheets and downloading CSV...
+    ════════════════════════════════════════════════════════
+    `;
       
       console.log(displayText);
 
-      // ===================== ส่งข้อมูลไปยัง Google Apps Script =====================
+      // ===================== Send data to Google Apps Script =====================
       const submissionId = createSubmissionId();
 
-      // สร้าง detailed rows สำหรับ Google Sheets
+      // Build detailed rows for Google Sheets.
       const detailedRows = [];
       stimulusOrder.forEach((stim, index) => {
         const trial = trialMap[stim];
         if (trial) {
           detailedRows.push({
+            native_language: nativeLanguage,
             submission_id: submissionId,
             Email: email,
             stimulus_order: index + 1,
@@ -464,6 +468,7 @@
 
       const payload = {
         submission_id: submissionId,
+        native_language: nativeLanguage,
         respondent_data: resultRow,
         detailed_results: detailedRows,
         sheetId: SHEET_ID
@@ -483,73 +488,73 @@
         downloadCsv();
 
         if (result.success && !result.fallback) {
-          alert('✓ ข้อมูลถูกส่งไปยัง Google Sheets เรียบร้อยแล้ว!\n\nHTTP Status: ' + response.status + '\n\nข้อมูล (ResultPattern.csv) ยังได้ดาวน์โหลดไปยังโฟลเดอร์ Downloads ของท่าน\n\n✓ Data sent to Google Sheets successfully!\n\nFile (ResultPattern.csv) also downloaded to your Downloads folder.');
+          alert('✓ Your responses have been submitted to Google Sheets successfully.\n\nHTTP Status: ' + response.status + '\n\nResultPattern.csv has also been downloaded to your Downloads folder.');
         } else if (result.success && result.fallback) {
-          alert('✓ ส่งข้อมูลผ่านโหมดสำรอง (' + result.fallback + ') เรียบร้อยแล้ว\n\nเบราว์เซอร์ของอุปกรณ์นี้บล็อกการอ่านผลตอบกลับโดยตรง แต่ข้อมูลถูกส่งออกจากเครื่องแล้ว\n\nกรุณาตรวจสอบใน Google Sheets ภายใน 10-30 วินาที\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
+          alert('✓ Your responses were sent using fallback mode (' + result.fallback + ').\n\nThis browser may restrict direct access to the response body; however, the data has been transmitted from your device.\n\nPlease verify the entry in Google Sheets after 10-30 seconds.\n\nCSV download completed.');
         } else {
-          alert('⚠️ เกิดข้อผิดพลาดในการส่งไปยัง Google Sheets\n\nHTTP Status: ' + response.status + '\nรายละเอียด: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
+          alert('⚠️ An error occurred while submitting data to Google Sheets.\n\nHTTP Status: ' + response.status + '\nDetails: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV download completed.');
         }
       })
       .catch(error => {
         console.error('Error sending to Google Sheets:', error);
         downloadCsv();
-        alert('⚠️ ข้อผิดพลาดในการส่งไปยัง Google Sheets\n\nรายละเอียด: ' + error.message + '\n\nข้อมูลถูกเก็บไว้ในอุปกรณ์นี้แล้ว และระบบจะลองส่งใหม่อัตโนมัติเมื่อเปิดหน้าแบบทดสอบอีกครั้ง\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
+        alert('⚠️ Submission to Google Sheets failed.\n\nDetails: ' + error.message + '\n\nYour data has been stored locally on this device and will be retried automatically the next time this page is opened.\n\nCSV download completed.');
       });
     }
   });
 
   // ========================================
-  // สร้าง timeline array เพื่อเก็บขั้นตอนทั้งหมดของการทดลอง
+  // Build timeline array for all experiment steps.
   // ========================================
   const timeline = [];
 
   // ========================================
-  // ขั้นตอนที่ 2: หน้าแรก - ชื่องานวิจัย และหมายเหตุเกี่ยวกับความเป็นส่วนตัว
+  // Step 2: Start page - research title and privacy notice.
   // ========================================
   const titleAndNotice = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align: center; padding: 30px 20px;">
         <h1 style="font-size: 18px; line-height: 1.8; margin: 0 0 20px 0;">
-          在日タイ語母語話者におけるイ段音（単音／拗音）<br>の口蓋化子音の聴取困難<br>
+          日本語学習者におけるイ段音（単音／拗音）<br>の口蓋化子音の聴取困難<br>
           <span style="font-size: 16px; font-weight: normal;">— 大規模横断調査による要因分析と教育への示唆 —</span><br>
-          <span style="font-size: 14px; font-weight: normal; color: #aaa; margin-top: 10px; display: block;">ปัญหาการแยกแยะเสียงพยัญชนะเพดานแข็ง (เสียงเดี่ยว/เสียงควบ)<br>ของผู้พูดภาษาไทยเป็นภาษาแม่ที่อาศัยในญี่ปุ่น<br>— การวิเคราะห์ปัจจัยผ่านการสำรวจขนาดใหญ่ และการให้ข้อเสนอแนะทางการศึกษา —</span>
+          <span style="font-size: 14px; font-weight: normal; color: #aaa; margin-top: 10px; display: block;">Perceptual difficulty of palatalized consonants in i-row sounds (monophthong / contracted forms)<br>among learners of Japanese<br>— Factor analysis based on a large-scale cross-sectional study and pedagogical implications —</span>
         </h1>
         
         <div style="background: #333; color: #fff; padding: 20px; border: 1px solid #666; border-radius: 5px; text-align: center; font-size: 14px; line-height: 1.6; margin-top: 20px;">
-          <strong>重要な注記 / หมายเหตุสำคัญ:</strong><br>
+          <strong>重要な注記 / Important Notice:</strong><br>
           本調査は研究目的でのデータ収集のみを目的としています。ご提供いただいたデータは機密として保管され、個人を特定できる情報を含まない概要形式で提示されます。<br>
           研究への参加は自由意思で決定でき、途中で中断・撤回できること、中断・撤回してもなんら不利益を被りません。<br>
           ご提供いただいたデータは本研究に使用され、学会で発表されます。<br>
           <br>
-          การสำรวจครั้งนี้มีวัตถุประสงค์เพื่อเก็บรวบรวมข้อมูลสำหรับการศึกษาวิจัยเท่านั้น ข้อมูลที่ท่านให้จะถูกเก็บไว้เป็นความลับ และนำเสนอในรูปแบบภาพรวมโดยไม่มีการระบุข้อมูลที่สามารถระบุตัวตนของท่านได้<br>
-          การเข้าร่วมการศึกษานี้เป็นไปตามความสมัครใจของคุณ คุณสามารถหยุดหรือถอนตัวได้ตลอดเวลา และการหยุดหรือถอนตัวจะไม่ก่อให้เกิดผลเสียใด ๆ<br>
-          ข้อมูลของท่านจะถูกใช้ในงานวิจัยนี้ และจะถูกนำเสนอในที่ประชุมทางวิชาการ<br>
+          This study is conducted exclusively for research purposes. All data you provide will be handled confidentially and reported only in aggregated form, without personally identifying information.<br>
+          Participation is entirely voluntary. You may discontinue or withdraw at any time without any disadvantage.<br>
+          The data collected in this study may be used for scholarly analysis and presented at academic conferences.<br>
           <br>
-          <strong>ご質問やお問い合わせ / ติดต่อผู้วิจัย:</strong><br>
+          <strong>ご質問やお問い合わせ / Contact:</strong><br>
           (+81)070-9192-6459 / u548378a@ecs.osaka-u.ac.jp<br>
           ケハナン アカラポン (Akarapong Kehanan)<br>
           大阪大学大学院 人文学研究科 博士後期課程
         </div>
       </div>
     `,
-    choices: ['同意する / ยินยอม', '同意しません / ไม่ยินยอม'],
+    choices: ['同意する / I consent', '同意しません / I do not consent'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; margin: 12px;">%choice%</button>',
     data: { task: 'title_and_notice' },
     on_finish: function(data) {
-      data.consent = data.response === 0; // 0 = ยินยอม, 1 = ไม่ยินยอม
+      data.consent = data.response === 0;
     }
   };
 
   // ========================================
-  // หน้าแสดงเมื่อผู้เข้าร่วมไม่ยินยอม
+  // Screen shown when the participant does not consent.
   // ========================================
   const consentRefusal = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align: center; padding: 30px 20px;">
         <h1 style="font-size: 24px; margin: 0 0 20px 0; color: #ff6b6b;">
-          申し訳ございません / ขออภัย
+          申し訳ございません / Sorry
         </h1>
         <div style="background: #333; color: #fff; padding: 20px; border: 1px solid #ff6b6b; border-radius: 5px; text-align: center; font-size: 14px; line-height: 1.8; margin-top: 20px;">
           <p style="margin: 10px 0;">
@@ -557,24 +562,24 @@
             ご協力いただき、ありがとうございました。
           </p>
           <p style="margin: 10px 0;">
-            <strong>ท่านไม่ยินยอมในการเข้าร่วมการวิจัย จึงขอสิ้นสุดการสำรวจนี้</strong><br>
-            ขอบคุณสำหรับความเสียสละเวลาของท่าน
+            <strong>As consent was not provided, this survey will now be terminated.</strong><br>
+            Thank you for your time and consideration.
           </p>
         </div>
       </div>
     `,
-    choices: ['ตกลง / 了解'],
+    choices: ['了解 / Close'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
   // ========================================
-  // ขั้นตอนที่ 3: แบบสอบถามเกี่ยวกับประสบการณ์การเรียนการออกเสียง
+  // Step 3: Survey on pronunciation-learning experience.
   // ========================================
   const preSurveyChoice = {
     type: jsPsychSurveyMultiChoice,
     questions: [
       {
-        prompt: '発音学習経験はありますか？\n<div style="margin-top:6px;color:#ccc;font-size:0.9em">คุณเคยเรียนการออกเสียงแบบเป็นระบบหรือไม่ (มี/ไม่มี)</div>',
+        prompt: '発音学習の経験はありますか。\n<div style="margin-top:6px;color:#ccc;font-size:0.9em">Have you received formal instruction in pronunciation? (Yes/No)</div>',
         name: 'pron_experience',
         options: ['無', '有'],
         required: true
@@ -584,38 +589,73 @@
   };
 
   // ========================================
-  // ขั้นตอนที่ 4: แบบสอบถามส่วนที่ 1
+  // Step 4: Pre-survey section 1.
   // ========================================
   const preSurveyForm = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
-      let yearOptions = '<option value="">กรุณาเลือก / 選択してください</option>';
-      for (let i = 0; i <= 50; i++) { yearOptions += `<option value="${i}">${i} 年/ปี</option>`; }
-      let monthOptions = '<option value="">กรุณาเลือก / 選択してください</option>';
-      for (let m = 0; m <= 12; m++) { monthOptions += `<option value="${m}">${m} ヶ月/เดือน</option>`; }
-      monthOptions += '<option value="3">ไม่แน่ใจ (ประมาณ0-6เดือน) / 不確定(約0-6か月)</option>';
-      monthOptions += '<option value="9">ไม่แน่ใจ (ประมาณ6-12เดือน) / 不確定(約6-12か月)</option>';
+      let yearOptions = '<option value="">Select / 選択してください</option>';
+      for (let i = 0; i <= 50; i++) { yearOptions += `<option value="${i}">${i} years / ${i} 年</option>`; }
+      let monthOptions = '<option value="">Select / 選択してください</option>';
+      for (let m = 0; m <= 12; m++) { monthOptions += `<option value="${m}">${m} months / ${m} ヶ月</option>`; }
+      monthOptions += '<option value="3">Not sure (about 0-6 months) / 不確定(約0-6か月)</option>';
+      monthOptions += '<option value="9">Not sure (about 6-12 months) / 不確定(約6-12か月)</option>';
+      const nativeLanguageOptions = [
+        'Thai',
+        'Japanese',
+        'Korean',
+        'Chinese (Mandarin)',
+        'Chinese (Cantonese)',
+        'Vietnamese',
+        'English (US)',
+        'English (UK)',
+        'French',
+        'German',
+        'Italian',
+        'Spanish',
+        'Arabic',
+        'Russian',
+        'Portuguese',
+        'Indonesian',
+        'Malay',
+        'Hindi',
+        'Bengali',
+        'Turkish',
+        'Persian (Farsi)',
+        'Ukrainian',
+        'Other'
+      ];
+      let nativeLanguageSelect = '<option value="">Select / 選択してください</option>';
+      nativeLanguageOptions.forEach(lang => {
+        nativeLanguageSelect += `<option value="${lang}">${lang}</option>`;
+      });
 
       return `
         <div style="color:#fff">
           <label><strong>学習期間（累積）はどのくらいですか？</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">ระยะเวลาการเรียนภาษาญี่ปุ่นรวม (ปี/เดือน)</div>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your total duration of Japanese language study (years/months).</div>
           <div style="margin:8px 0">
             <select id="study_year">${yearOptions}</select>
             <select id="study_month">${monthOptions}</select>
           </div>
 
           <label><strong>滞在期間（合計）はどのくらいですか？</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">ระยะเวลาการพำนักที่ประเทศญี่ปุ่นรวม (ปี และ เดือน)</div>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your cumulative length of residence in Japan (years/months).</div>
           <div style="margin:8px 0">
             <select id="stay_year">${yearOptions}</select>
             <select id="stay_month">${monthOptions}</select>
           </div>
 
+          <label><strong>母語は何ですか？</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please select your native language (L1).</div>
+          <div style="margin:8px 0">
+            <select id="native_language">${nativeLanguageSelect}</select>
+          </div>
+
           <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">กรุณากรอกอีเมล (@ และ . ถูกใส่ไว้ให้แล้ว)<br>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
           必須ではありません。このメールアドレスの個人情報は、研究が完了するまで (3年以内) 安全ななデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
-          ไม่จำเป็นต้องใส่ ข้อมูลส่วนตัวในช่องอีเมลนี้จะถูกเก็บไว้จนกว่างานวิจัยจะเสร็จสมบูรณ์ (ไม่เกิน 3 ปี) ใน database ที่ปลอดภัย และจะใช้สำหรับการติดต่อกลับในกรณีฉุกเฉินเท่านั้น</div>
+          This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
           <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
             <input id="email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
             <span>@</span>
@@ -624,7 +664,7 @@
             <input id="email_tld" type="text" placeholder="com" style="width:80px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
           </div>
           
-          <button id="preSurveyFormBtn" style="margin-top:20px; padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Continue</button>
+          <button id="preSurveyFormBtn" style="margin-top:20px; padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Proceed / 続行</button>
           <div id="validationError" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
         </div>
       `;
@@ -638,10 +678,11 @@
         const study_month = document.getElementById('study_month')?.value || '';
         const stay_year = document.getElementById('stay_year')?.value || '';
         const stay_month = document.getElementById('stay_month')?.value || '';
+        const native_language = document.getElementById('native_language')?.value || '';
         
-        if (!study_year || !study_month || !stay_year || !stay_month) {
+        if (!study_year || !study_month || !stay_year || !stay_month || !native_language) {
           const errorDiv = document.getElementById('validationError');
-          errorDiv.innerText = 'กรุณาเลือกระยะเวลาให้ครบถ้วน\n選択を完了してください';
+          errorDiv.innerText = 'Please complete all required fields.\n必須項目を選択してください。';
           errorDiv.style.display = 'block';
           return;
         }
@@ -650,20 +691,20 @@
         const domain = document.getElementById('email_domain')?.value || '';
         const tld = document.getElementById('email_tld')?.value || '';
         const email = (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
-        jsPsych.data.write({ task: 'pre_survey_form', study_year, study_month, stay_year, stay_month, email });
+        jsPsych.data.write({ task: 'pre_survey_form', study_year, study_month, stay_year, stay_month, native_language, email });
         jsPsych.finishTrial();
       });
     }
   };
 
   // ========================================
-  // ขั้นตอนที่ 5: แบบสอบถามส่วนที่ 2 (แบบมีเงื่อนไข)
+  // Step 5: Pre-survey section 2 (conditional).
   // ========================================
   const institutionTrial = {
     type: jsPsychSurveyText,
     questions: [
       {
-        prompt: 'ท่านเคยเรียนการออกเสียงภาษาญี่ปุ่นในสถาบันใด ๆ หรือไม่ (ถ้ามี โปรดระบุชื่อสถาบัน)<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
+        prompt: 'Have you undertaken Japanese pronunciation study at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
         name: 'institution',
         placeholder: '受講した場合は機関名を入力',
         required: false
@@ -673,38 +714,38 @@
   };
 
   // ========================================
-  // ขั้นตอนที่ 6: คำแนะนำการทดลอง
+  // Step 6: Experiment instructions.
   // ========================================
   const instructions = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">ยินดีต้อนรับ / ようこそ</h2>
+        <h2 style="text-align: center;">ようこそ / Welcome</h2>
         
-        <h3 style="color: #aaa; margin-top: 25px;">【ไทย】</h3>
-        <p>การทดสอบนี้เป็นแบบทดสอบการแยกแยะเสียงภาษาญี่ปุ่น จำนวนข้อทั้งหมด <strong>44 ข้อ</strong></p>
-        <p>ในแต่ละข้อ จะมีเสียงเล่นให้ฟังหนึ่งครั้ง แล้วให้เลือกคำตอบที่ตรงกับเสียงนั้นจากห้าตัวเลือก</p>
-        <p>ก่อนเริ่มการทดสอบจริง จะมีคำถามตัวอย่าง (demo) <strong>2 ข้อ</strong> เพื่อให้คุ้นเคยกับรูปแบบ โดยข้อทดลองเหล่านี้ไม่ถูกนำไปคำนวณคะแนน</p>
-        <p>ระบบจะสุ่มลำดับตัวเลือกในแต่ละข้อโดยอัตโนมัติ</p>
+        <h3 style="color: #aaa; margin-top: 25px;">【English】</h3>
+        <p>This study consists of a Japanese speech perception test comprising <strong>44 items</strong>.</p>
+        <p>In each item, a single audio stimulus will be played once. Please select the option that most closely matches what you heard from the five available choices.</p>
+        <p>Prior to the main session, you will complete <strong>2 practice items</strong>. Practice responses are not included in scoring.</p>
+        <p>The order of response options is randomized for each item.</p>
         <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
-          <strong>📌 ข้อสำคัญ:</strong> ท่านสามารถเลือกคำตอบเดียวกันซ้ำในหลายข้อได้ หากได้ยินเสียงที่เหมือนกัน<br>
-          <span style="color: #ccc; font-size: 0.92em;">เช่น หากได้ยิน sha ในข้อที่ 1 และฟังแล้วรู้สึกว่าข้อที่ 2 ก็เป็น sha เช่นกัน สามารถเลือก sha ซ้ำได้</span>
+          <strong>📌 Important:</strong> You may select the same option in multiple items when you perceive the same sound.<br>
+          <span style="color: #ccc; font-size: 0.92em;">For example, if you select "sha" in Item 1 and Item 2 also sounds like "sha", selecting "sha" again is appropriate.</span>
         </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ โปรดตอบให้เร็วที่สุดตามธรรมชาติ</strong> โดยไม่จำเป็นต้องคิดนาน เพื่อให้ได้ผลลัพธ์ที่แม่นยำที่สุด (ไม่มีการจำกัดเวลา)</p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ Please respond naturally and as promptly as possible</strong> without over-deliberation (there is no time limit).</p>
         
         <h3 style="color: #aaa; margin-top: 25px;">【日本語】</h3>
         <p>本調査は日本語音声の聴覚識別テストです。全部で <strong>44 問</strong>あります。</p>
-        <p>各問題では音声が1回再生されます。聞こえた音に最も近い選択肢を5つの中から1つ選んでください。</p>
-        <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点に含まれませんが、本番と同じ要領で回答してください。</p>
+        <p>各項目では音声が1回再生されます。聞こえた音に最も近い選択肢を、5つの中から1つ選択してください。</p>
+        <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点対象ではありませんが、本番と同様にご回答ください。</p>
         <p>各問題における選択肢の順序は、毎回ランダムに入れ替わります。</p>
         <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
           <strong>📌 重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
           <span style="color: #ccc; font-size: 0.92em;">例えば、問1で「sha」と答えた場合でも、問2でも「sha」に聞こえた場合は、同じく「sha」を選んでいただいても構いません。</span>
         </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ なるべく自然なスピードで、直感的にお答えください</strong>（時間制限はありません）</p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ できるだけ自然な速度で、直感的にご回答ください</strong>（時間制限はありません）</p>
       </div>
     `,
-    choices: ['เริ่มต้น / 開始'],
+    choices: ['開始 / Begin'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
   timeline.push(titleAndNotice);
@@ -737,7 +778,7 @@
   timeline.push(instructions);
 
   // ========================================
-  // ขั้นตอนที่ 7: ข้อมูลการทดลอง (ตัวอักษร 44 ข้อ)
+  // Step 7: Main experiment items (44 stimuli).
   // ========================================
   const trials = [
     { stimulus: 'し', choices: ['し (shi)', 'ち (chi)', 'ひ (hi)', 'き (ki)', '他(other)'], correct_response: 'し (shi)' },
@@ -799,7 +840,7 @@
   };
 
   // ========================================
-  // Trial ที่เล่นเสียงจริงจากโฟลเดอร์ audio/ (แทนที่ audioPlaceholder เดิม)
+  // Trial that plays actual audio from the audio/ folder.
   // ========================================
   const audioTrial = {
     type: jsPsychHtmlKeyboardResponse,
@@ -831,7 +872,7 @@
 
   const responseTrial = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p style="font-size:16px;">กรุณาเลือกคำตอบที่ตรงกับเสียงที่ท่านได้ยิน<br><span style="color:#aaa; font-size:14px;">聞こえた音に最も近い選択肢を選んでください</span></p>',
+    stimulus: '<p style="font-size:16px;">Please select the option that most closely matches the sound you heard.<br><span style="color:#aaa; font-size:14px;">聞こえた音に最も近い選択肢を選択してください</span></p>',
     choices: jsPsych.timelineVariable('choices'),
     button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
     data: {
@@ -874,9 +915,9 @@
     type: jsPsychSurveyText,
     questions: [
       {
-        prompt: '<div style="margin-bottom: 15px;"><strong>ใส่เสียงที่ท่านได้ยินลงด้านล่างเป็นตัวอักษรโรมาจิ</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">เช่น di, ti, fi, ri เป็นต้น</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>หากได้ยินต่างจากที่คาดหมาย:</strong><br/>ถ้าได้ยิน "si" (ซิ) → ใส่ si<br/>ถ้าได้ยิน "ti" (ทิ) → ใส่ ti<br/>ถ้าได้ยิน "fi" (ฟิ) → ใส่ fi<br/><br/>補足：<br/>もし違う音に聞こえたら：si, ti, fi など入力してください</span></div>',
+        prompt: '<div style="margin-bottom: 15px;"><strong>Please enter the perceived sound in romaji below.</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">e.g., di, ti, fi, ri</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>If the perceived sound differs from the provided options:</strong><br/>If you hear "si", enter si<br/>If you hear "ti", enter ti<br/>If you hear "fi", enter fi<br/><br/>補足：<br/>想定された選択肢と異なる音に聞こえた場合は、si・ti・fi などをご入力ください。</span></div>',
         name: 'other_sound',
-        placeholder: 'พิมพ์เสียงโรมาจิ / ローマ字を入力',
+        placeholder: 'Enter romaji / ローマ字を入力',
         required: true
       }
     ],
@@ -912,18 +953,18 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">ข้อทดลองก่อนเริ่มจริง /練習問題</h2>
-        <p>ก่อนเริ่มการทดสอบจริง จะมี <strong>2 ข้อทดลอง</strong> เพื่อให้คุณคุ้นเคยกับรูปแบบข้อสอบ</p>
-        <p>ข้อทดลองทั้งสองข้อ <strong>จะไม่ถูกบันทึกในผลลัพธ์</strong> แต่ให้ตอบเหมือนข้อจริง</p>
-        <p>เมื่อพร้อมแล้ว กรุณากดปุ่มด้านล่างเพื่อเริ่มต้น</p>
+        <h2 style="text-align: center;">練習問題 / Practice</h2>
+        <p>Before the main test, you will complete <strong>2 practice items</strong> to familiarize yourself with the procedure.</p>
+        <p>Practice responses <strong>are not included in the final analysis</strong>; however, please answer them in the same manner as the main test.</p>
+        <p>When you are ready, please press the button below to begin practice.</p>
         <hr style="margin: 18px 0; border-color: rgba(255,255,255,0.2);"/>
         <h3 style="color: #aaa;">【日本語】</h3>
-        <p>本番のテストの前に、<strong>2 問の練習問題</strong>があります。</p>
-        <p>練習問題の回答は採点・記録に含まれませんが、本番と同じ要領で回答してください。</p>
+        <p>本番テストの前に、<strong>2 問の練習問題</strong>があります。</p>
+        <p>練習問題の回答は採点・記録の対象には含まれませんが、本番と同様にご回答ください。</p>
         <p>準備ができましたら、下のボタンを押して練習を開始してください。</p>
       </div>
     `,
-    choices: ['เริ่มข้อทดลอง / 練習問題を始める'],
+    choices: ['練習問題を始める / Begin practice'],
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
@@ -937,13 +978,13 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">เริ่มการทดสอบจริง / 本番テスト開始</h2>
-        <p>ตอนนี้จะเป็นส่วนของการทดสอบจริงทั้งหมด</p>
-        <p>จากนี้ไป คำตอบจะถูกบันทึกและนำมาคำนวณผลลัพธ์</p>
+        <h2 style="text-align: center;">本番テスト開始 / Main Test Start</h2>
+        <p>The main test will now begin.</p>
+        <p>From this point onward, all responses will be recorded and used for analysis.</p>
         <p>これより本番のテストを開始いたします。これからの解答はすべて記録され、結果の算出に使用されます。</p>
       </div>
     `,
-    choices: ['เริ่มการทดสอบจริง / 本番テスト開始'],
+    choices: ['本番テスト開始 / Begin main test'],
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
@@ -960,13 +1001,13 @@
   const debrief = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <p>"ผู้วิจัยขอขอบพระคุณในความอนุเคราะห์และความเสียสละเวลาของท่านเป็นอย่างยิ่ง ข้อมูลของท่านเป็นประโยชน์อย่างยิ่งต่องานวิจัยชิ้นนี้ ขออวยพรให้ท่านประสบความสำเร็จในหน้าที่การงานและมีสุขภาพพลานามัยที่แข็งแรงสมบูรณ์"</p>
+      <p>"Thank you very much for your participation. Your responses are of great value to this study. We sincerely wish you continued success and good health."</p>
       <p style="margin-top: 20px; color: #999;">「ご協力いただき、ありがとうございました。皆様の貴重なご意見は、本研究の遂行に大変役立たせていただきます。皆様のますますのご活躍とご健康をお祈りしております。」</p>
       <div style="margin-top: 24px; padding: 16px 20px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 6px; font-size: 14px; line-height: 1.8; text-align: left;">
-        <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 หมายเหตุ / 備考</strong></p>
-        <p style="margin: 0 0 6px 0;">เมื่อกดปุ่มด้านล่าง <strong>ไฟล์ข้อมูลคำตอบ</strong> จะถูกดาวน์โหลดลงในเครื่องของท่านโดยอัตโนมัติ<br>
-        กรุณาเก็บไฟล์นี้ไว้ เผื่อในกรณีที่เซิร์ฟเวอร์หรืออินเตอร์เน็ตของท่านขัดข้อง ทางผู้วิจัยอาจติดต่อขอรับไฟล์ดังกล่าวภายหลัง<br>
-        ผ่านทางอีเมล: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
+        <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 備考 / Note</strong></p>
+        <p style="margin: 0 0 6px 0;">When you press the button below, a <strong>response data file</strong> will be downloaded automatically.<br>
+        Please retain this file in case of server or network issues; the researcher may request it at a later date via email:<br>
+        <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
         <hr style="border-color: rgba(255,255,255,0.15); margin: 10px 0;"/>
         <p style="margin: 0; color: #ccc;">送信ボタンを押すと、<strong>回答データファイル（ResultPattern.csv）</strong>が自動的にダウンロードされます。<br>
         サーバーやインターネット接続に問題が生じた場合に備え、このファイルを保管しておいてください。<br>
@@ -974,7 +1015,7 @@
         連絡先: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
       </div>
     `,
-    choices: ['คลิกที่นี่เพื่อส่งข้อมูลไปยังเซิร์ฟเวอร์ / 回答データをサーバーに送信する'],
+    choices: ['回答データをサーバーに送信する / Submit responses to server'],
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
   timeline.push(debrief);
