@@ -17,12 +17,12 @@
     :root {
       --ink: #ecf1f8;
       --muted-ink: #bfd0e7;
-      --panel: rgba(8, 18, 33, 0.78);
-      --panel-border: rgba(161, 189, 226, 0.25);
+      --panel: rgba(10, 22, 40, 0.62);
+      --panel-border: rgba(181, 206, 240, 0.36);
       --accent: #b7cced;
       --accent-strong: #85abde;
       --focus-ring: rgba(133, 171, 222, 0.45);
-      --shadow: 0 20px 45px rgba(1, 7, 18, 0.42);
+      --shadow: 0 22px 50px rgba(1, 7, 18, 0.5);
     }
 
     * { box-sizing: border-box; }
@@ -47,8 +47,8 @@
       background-position: center;
       background-size: cover;
       background-repeat: no-repeat;
-      opacity: 0.16;
-      filter: saturate(0.75) contrast(1.05);
+      opacity: 0.22;
+      filter: saturate(0.92) contrast(1.07);
       z-index: -2;
       pointer-events: none;
     }
@@ -74,7 +74,7 @@
       border: 1px solid var(--panel-border);
       background: var(--panel);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(5px);
+      backdrop-filter: blur(12px);
       border-radius: 14px;
       padding: 26px 24px;
       max-width: 960px;
@@ -89,20 +89,31 @@
     }
 
     .jspsych-btn {
-      background: linear-gradient(180deg, #1d385e, #142742);
-      color: #f4f8ff;
-      border: 1px solid #6f8eb8;
+      background: linear-gradient(180deg, #2a4f80, #1b3457);
+      color: #f7fbff;
+      border: 1px solid #93b7e4;
       border-radius: 8px;
       font-weight: 600;
       padding: 9px 18px;
       transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
-      box-shadow: 0 8px 18px rgba(6, 17, 34, 0.35);
+      box-shadow: 0 10px 22px rgba(6, 17, 34, 0.44);
     }
 
     .jspsych-btn:hover {
       transform: translateY(-1px);
-      background: linear-gradient(180deg, #23446f, #183151);
-      box-shadow: 0 10px 22px rgba(7, 20, 40, 0.45);
+      background: linear-gradient(180deg, #316094, #224169);
+      box-shadow: 0 12px 24px rgba(7, 20, 40, 0.52);
+    }
+
+    button:not(.jspsych-btn) {
+      color: #f7fbff !important;
+      border-color: rgba(150, 184, 226, 0.82) !important;
+      background: linear-gradient(180deg, rgba(39, 70, 109, 0.92), rgba(26, 47, 76, 0.92)) !important;
+      box-shadow: 0 8px 18px rgba(6, 17, 34, 0.34);
+    }
+
+    button:not(.jspsych-btn):hover {
+      background: linear-gradient(180deg, rgba(51, 89, 137, 0.94), rgba(32, 59, 93, 0.94)) !important;
     }
 
     .jspsych-btn:focus-visible,
@@ -118,12 +129,23 @@
     input[type="text"],
     input[type="email"],
     textarea {
-      background: rgba(6, 14, 26, 0.86);
+      background: rgba(7, 18, 33, 0.7);
       color: #f4f8ff;
-      border: 1px solid #55739c;
+      border: 1px solid #7fa2ce;
       border-radius: 7px;
       padding: 8px 9px;
       font-family: 'IBM Plex Sans', 'Noto Sans JP', sans-serif;
+    }
+
+    div[style*="background:#333"],
+    div[style*="background: #333"],
+    div[style*="background:#1a1a1a"],
+    div[style*="background: #1a1a1a"],
+    div[style*="background:#111"],
+    div[style*="background: #111"] {
+      background: rgba(12, 26, 46, 0.56) !important;
+      border-color: rgba(166, 197, 236, 0.3) !important;
+      backdrop-filter: blur(10px);
     }
 
     #ouBrandHeader {
@@ -1658,23 +1680,32 @@
         }
 
         if (state.step === 2) {
+          const enforceNativeFirst = () => {
+            if (!state.nativeLanguage) return;
+            const existingIndex = state.learnedLanguages.indexOf(state.nativeLanguage);
+            if (existingIndex === -1) {
+              state.learnedLanguages.unshift(state.nativeLanguage);
+              return;
+            }
+
+            if (existingIndex > 0) {
+              state.learnedLanguages.splice(existingIndex, 1);
+              state.learnedLanguages.unshift(state.nativeLanguage);
+            }
+          };
+
+          enforceNativeFirst();
+
           displayElement.innerHTML = `
             <div style="color:#fff; text-align:left; max-width:820px; margin:0 auto;">
               <h2 style="text-align:center; margin-top:0;">Language order / 言語順</h2>
               <label><strong>学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。</strong></label>
-              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. The first item must be your native language.</div>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. Your native language is inserted automatically as the first item.</div>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">The system will automatically calculate the total number of languages and the order of Japanese from this list.</div>
-              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please use standardized language names whenever available. If a language is not listed, please add it manually.</div>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please select from the standardized list below.</div>
               <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <select id="wizard_language_picker" style="min-width:300px; max-width:100%;">${buildSelectOptions()}</select>
                 <button type="button" id="wizard_add_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add from list / リストから追加</button>
-              </div>
-              <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input id="wizard_language_custom" type="text" placeholder="Custom language (if not listed) / 自由入力（リストにない場合）" style="width:100%; max-width:500px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
-                <button type="button" id="wizard_add_custom_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add custom / 自由入力を追加</button>
-              </div>
-              <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <button type="button" id="wizard_native_first_btn" style="padding:6px 12px; background:#333; color:#fff; border:1px solid #666; border-radius:4px; cursor:pointer;">Add native language as first item / 母語を先頭に追加</button>
               </div>
               <div style="margin-top:8px; color:#ccc; font-size:0.9em;">Current order / 現在の順序</div>
               <ol id="wizard_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
@@ -1691,6 +1722,7 @@
           const hiddenField = document.getElementById('wizard_languages_hidden');
 
           const renderLanguages = () => {
+            enforceNativeFirst();
             learnedListElement.innerHTML = '';
             state.learnedLanguages.forEach((language, index) => {
               const li = document.createElement('li');
@@ -1709,7 +1741,16 @@
               removeBtn.style.border = '1px solid #555';
               removeBtn.style.borderRadius = '4px';
               removeBtn.style.cursor = 'pointer';
+
+              if (language === state.nativeLanguage && index === 0) {
+                removeBtn.textContent = 'Fixed';
+                removeBtn.disabled = true;
+                removeBtn.style.opacity = '0.55';
+                removeBtn.style.cursor = 'not-allowed';
+              }
+
               removeBtn.addEventListener('click', () => {
+                if (language === state.nativeLanguage && index === 0) return;
                 state.learnedLanguages.splice(index, 1);
                 renderLanguages();
                 clearError('wizard_step2_error');
@@ -1739,27 +1780,6 @@
 
           document.getElementById('wizard_add_language_btn').addEventListener('click', function() {
             addLanguage(document.getElementById('wizard_language_picker')?.value || '');
-          });
-
-          document.getElementById('wizard_add_custom_btn').addEventListener('click', function() {
-            addLanguage(document.getElementById('wizard_language_custom')?.value || '');
-            const customInput = document.getElementById('wizard_language_custom');
-            if (customInput) customInput.value = '';
-          });
-
-          document.getElementById('wizard_native_first_btn').addEventListener('click', function() {
-            if (!state.nativeLanguage) {
-              showError('wizard_step2_error', 'Please go back and select your native language first.\n先に母語を選択してください。');
-              return;
-            }
-
-            const existingIndex = state.learnedLanguages.indexOf(state.nativeLanguage);
-            if (existingIndex !== -1) {
-              state.learnedLanguages.splice(existingIndex, 1);
-            }
-            state.learnedLanguages.unshift(state.nativeLanguage);
-            clearError('wizard_step2_error');
-            renderLanguages();
           });
 
           document.getElementById('wizard_step2_back').addEventListener('click', function() {
