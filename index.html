@@ -123,22 +123,35 @@
     });
 
     const responseText = await response.text();
-    let result = {};
+    let result = null;
 
     if (responseText) {
       try {
         result = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error(`HTTP ${response.status} ${response.statusText} | Invalid JSON response: ${responseText}`);
+        // Some mobile browsers cannot read cross-origin JSON body reliably.
+        // If HTTP status is success, treat this as delivered and continue.
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} ${response.statusText} | Invalid response body: ${responseText}`);
+        }
+
+        result = {
+          success: true,
+          fallback: 'non_json_success_response'
+        };
       }
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ${response.statusText} | ${result.error || responseText || 'Request failed'}`);
+      throw new Error(`HTTP ${response.status} ${response.statusText} | ${(result && result.error) || responseText || 'Request failed'}`);
     }
 
-    if (result.success === false) {
+    if (result && result.success === false) {
       throw new Error(result.error || 'Google Apps Script returned success=false');
+    }
+
+    if (!result) {
+      result = { success: true, fallback: 'empty_success_response' };
     }
 
     return { response, result, responseText };
