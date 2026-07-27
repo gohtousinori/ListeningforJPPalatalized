@@ -595,39 +595,112 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
       let yearOptions = '<option value="">Select / 選択してください</option>';
-      for (let i = 0; i <= 50; i++) { yearOptions += `<option value="${i}">${i} years / ${i} 年</option>`; }
+      for (let i = 0; i <= 50; i++) {
+        const yearLabel = i === 1 ? 'year' : 'years';
+        yearOptions += `<option value="${i}">${i} ${yearLabel} / ${i} 年</option>`;
+      }
       let monthOptions = '<option value="">Select / 選択してください</option>';
-      for (let m = 0; m <= 12; m++) { monthOptions += `<option value="${m}">${m} months / ${m} ヶ月</option>`; }
+      for (let m = 0; m <= 12; m++) {
+        const monthLabel = m === 1 ? 'month' : 'months';
+        monthOptions += `<option value="${m}">${m} ${monthLabel} / ${m} ヶ月</option>`;
+      }
       monthOptions += '<option value="3">Not sure (about 0-6 months) / 不確定(約0-6か月)</option>';
       monthOptions += '<option value="9">Not sure (about 6-12 months) / 不確定(約6-12か月)</option>';
       const nativeLanguageOptions = [
-        'Thai',
-        'Japanese',
-        'Korean',
-        'Chinese (Mandarin)',
-        'Chinese (Cantonese)',
-        'Vietnamese',
+        { label: '----- Asian Languages -----', disabled: true },
+        'Thai (ภาษาไทย)',
+        'Japanese (日本語)',
+        'Korean (한국어)',
+        'Vietnamese (Tiếng Việt)',
+        'Indonesian (Bahasa Indonesia)',
+        'Filipino, Tagalog (Filipino/Tagalog)',
+        'Malay (Bahasa Melayu)',
+        'Nepali (नेपाली)',
+        'Sinhala (සිංහල)',
+        'Khmer (ខ្មែរ)',
+        'Mongolian (Монгол)',
+        'Kazakh (Қазақ тілі)',
+        'Uzbek (Oʻzbekcha)',
+        'Pashto (پښتو)',
+        'Tibetan (བོད་ཡིག)',
+        'Lao (ພາສາລາວ)',
+        'Burmese (မြန်မာဘာသာ)',
+        'Turkish (Türkçe)',
+        { label: '----- Chinese -----', disabled: true },
+        'Chinese, Mandarin (中文/普通话)',
+        'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
+        'Chinese, Cantonese (中文/廣東話)',
+        { label: '----- Indian Languages -----', disabled: true },
+        'Hindi (हिन्दी)',
+        'Punjabi (ਪੰਜਾਬੀ)',
+        'Bengali (বাংলা)',
+        'Telugu (తెలుగు)',
+        'Tamil (தமிழ்)',
+        'Marathi (मराठी)',
+        'Gujarati (ગુજરાતી)',
+        { label: '----- Europe -----', disabled: true },
         'English (US)',
         'English (UK)',
-        'French',
-        'German',
-        'Italian',
-        'Spanish',
-        'Arabic',
-        'Russian',
-        'Portuguese',
-        'Indonesian',
-        'Malay',
-        'Hindi',
-        'Bengali',
-        'Turkish',
-        'Persian (Farsi)',
-        'Ukrainian',
-        'Other'
+        'French (Français)',
+        'German (Deutsch)',
+        'Hungarian (Magyar)',
+        'Italian (Italiano)',
+        'Spanish (español)',
+        'Portuguese (português)',
+        'Danish (Dansk)',
+        'Finnish (Suomi)',
+        'Norwegian (Norsk)',
+        'Swedish (Svenska)',
+        'Greek (Ελληνικά)',
+        'Albanian (Shqip)',
+        'Dutch (Nederlands)',
+        'Romanian (Română)',
+        'Lithuanian (Lietuvių)',
+        'Latvian (Latviešu)',
+        'Estonian (Eesti)',
+        { label: '----- Slavic Languages -----', disabled: true },
+        'Russian (Русский)',
+        'Belarusian (Беларуская)',
+        'Ukrainian (Українська)',
+        'Polish (Polski)',
+        'Czech (Čeština)',
+        'Slovak (Slovenčina)',
+        'Bulgarian (Български)',
+        'Macedonian (Македонски)',
+        'Slovenian (Slovenščina)',
+        'Croatian (Hrvatski)',
+        'Bosnian (Bosanski)',
+        'Serbian (Српски)',
+        { label: '----- Middle East -----', disabled: true },
+        'Arabic (العربية)',
+        'Persian, Farsi (فارسی)',
+        'Urdu (اردو)',
+        'Hebrew (עברית)',
+        'Kurdish (Kurdî)',
+        'Armenian (Հայերեն)',
+        { label: '----- Africa -----', disabled: true },
+        'Swahili (Kiswahili)',
+        'Amharic (አማርኛ)',
+        'Somali (Soomaali)',
+        'Hausa (Hausa)',
+        'Yoruba (Yorùbá)',
+        'Zulu (isiZulu)',
+        { label: '----- Americas -----', disabled: true },
+        'Portuguese, Brazilian (Português do Brasil)',
+        'French, Canadian (Français canadien)',
+        'Haitian Creole (Kreyòl Ayisyen)',
+        { label: '----- Oceania -----', disabled: true },
+        'Maori (Te Reo Māori)',
+        
       ];
       let nativeLanguageSelect = '<option value="">Select / 選択してください</option>';
-      nativeLanguageOptions.forEach(lang => {
-        nativeLanguageSelect += `<option value="${lang}">${lang}</option>`;
+      nativeLanguageOptions.forEach(item => {
+        if (typeof item === 'string') {
+          nativeLanguageSelect += `<option value="${item}">${item}</option>`;
+          return;
+        }
+
+        nativeLanguageSelect += `<option value="" disabled>${item.label}</option>`;
       });
 
       return `
@@ -654,7 +727,7 @@
 
           <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
-          必須ではありません。このメールアドレスの個人情報は、研究が完了するまで (3年以内) 安全ななデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
+          必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
           This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
           <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
             <input id="email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
@@ -737,7 +810,7 @@
         <p>本調査は日本語音声の聴覚識別テストです。全部で <strong>44 問</strong>あります。</p>
         <p>各項目では音声が1回再生されます。聞こえた音に最も近い選択肢を、5つの中から1つ選択してください。</p>
         <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点対象ではありませんが、本番と同様にご回答ください。</p>
-        <p>各問題における選択肢の順序は、毎回ランダムに入れ替わります。</p>
+        <p>各項目における選択肢の順序は、毎回ランダムに入れ替わります。</p>
         <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
           <strong>📌 重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
           <span style="color: #ccc; font-size: 0.92em;">例えば、問1で「sha」と答えた場合でも、問2でも「sha」に聞こえた場合は、同じく「sha」を選んでいただいても構いません。</span>
