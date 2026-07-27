@@ -330,7 +330,27 @@ among learners of Japanese
     document.body.appendChild(footer);
   }
 
-  mountFooter();
+  function ensurePersistentBranding() {
+    mountBrandHeader();
+    mountFooter();
+  }
+
+  let brandingObserverStarted = false;
+  function startBrandingObserver() {
+    if (brandingObserverStarted || !document.body) return;
+    brandingObserverStarted = true;
+
+    const observer = new MutationObserver(function() {
+      if (!document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
+        ensurePersistentBranding();
+      }
+    });
+
+    observer.observe(document.body, { childList: true });
+  }
+
+  ensurePersistentBranding();
+  startBrandingObserver();
 
   // ========================================
   // Mapping: stimulus (kana) -> audio filename (romaji, no extension)
@@ -572,7 +592,11 @@ among learners of Japanese
   // Step 1: Initialize jsPsych and configure result submission to Google Sheets.
   // ========================================
   const jsPsych = initJsPsych({
+    on_trial_start: function() {
+      ensurePersistentBranding();
+    },
     on_finish: function() {
+      ensurePersistentBranding();
       const allData = jsPsych.data.get().values();
       const responseRows = allData.filter(r => r.task === 'response');
       
