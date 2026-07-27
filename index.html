@@ -456,6 +456,39 @@
 
   const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYHlkCLsRIJifCDTMFdmLwXyz9PC31ReUz-RxWbasI3ywEVrn_LF9AKzWx-5bp6sXi0Q/exec';
   const PENDING_SUBMISSIONS_KEY = 'palatalizedsoundtest_pending_submissions';
+  const PRE_SURVEY_CACHE_KEY = 'palatalizedsoundtest_pre_survey_cache';
+  let confirmedPreSurveyData = null;
+
+  function savePreSurveyCache(data) {
+    confirmedPreSurveyData = data && typeof data === 'object' ? { ...data } : null;
+    try {
+      if (confirmedPreSurveyData) {
+        sessionStorage.setItem(PRE_SURVEY_CACHE_KEY, JSON.stringify(confirmedPreSurveyData));
+      }
+    } catch (error) {
+      console.warn('Unable to persist pre-survey cache:', error);
+    }
+  }
+
+  function loadPreSurveyCache() {
+    if (confirmedPreSurveyData && typeof confirmedPreSurveyData === 'object') {
+      return confirmedPreSurveyData;
+    }
+
+    try {
+      const raw = sessionStorage.getItem(PRE_SURVEY_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        confirmedPreSurveyData = parsed;
+        return confirmedPreSurveyData;
+      }
+    } catch (error) {
+      console.warn('Unable to read pre-survey cache:', error);
+    }
+
+    return null;
+  }
 
   function createSubmissionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -684,6 +717,13 @@
       syncBrandingLayoutSpacing();
       const allData = jsPsych.data.get().values();
       const responseRows = allData.filter(r => r.task === 'response');
+
+      const findLatestByTask = (taskName) => {
+        for (let i = allData.length - 1; i >= 0; i--) {
+          if (allData[i] && allData[i].task === taskName) return allData[i];
+        }
+        return {};
+      };
       
       // ===================== Fixed 44-item stimulus order =====================
       const stimulusOrder = [
@@ -699,14 +739,19 @@
       const tanOnList = ['し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ'];
       
       // ===================== Collect base participant data =====================
-      const preFormData = allData.find(r => r.task === 'pre_survey_form') || {};
-      const studyYear = preFormData.study_year || '';
-      const studyMonth = preFormData.study_month || '';
-      const stayYear = preFormData.stay_year || '';
-      const stayMonth = preFormData.stay_month || '';
-      const nativeLanguage = preFormData.native_language || '';
-      const preLangData = allData.find(r => r.task === 'pre_survey_languages') || {};
-      const learnedLanguagesList = preLangData.learned_languages_list || preFormData.learned_languages_list || '';
+      const preFormData = findLatestByTask('pre_survey_form');
+      const preLangData = findLatestByTask('pre_survey_languages');
+      const preChoiceData = findLatestByTask('pre_survey_choice');
+      const preInstData = findLatestByTask('pre_survey_institution');
+      const preWizardData = findLatestByTask('pre_survey_wizard');
+      const preSurveyData = loadPreSurveyCache() || preWizardData || {};
+
+      const studyYear = preSurveyData.study_year || preFormData.study_year || '';
+      const studyMonth = preSurveyData.study_month || preFormData.study_month || '';
+      const stayYear = preSurveyData.stay_year || preFormData.stay_year || '';
+      const stayMonth = preSurveyData.stay_month || preFormData.stay_month || '';
+      const nativeLanguage = preSurveyData.native_language || preFormData.native_language || '';
+      const learnedLanguagesList = preSurveyData.learned_languages_list || preLangData.learned_languages_list || preFormData.learned_languages_list || '';
 
       const normalizeLanguageForMetrics = (language) => {
         const value = String(language || '').trim().toLowerCase();
@@ -723,11 +768,10 @@
       const japaneseLanguageOrder = japaneseIndex >= 0 ? String(japaneseIndex + 1) : '';
       const totalLanguagesLearned = String(normalizedLanguages.length || '');
 
-      const preChoiceData = allData.find(r => r.task === 'pre_survey_choice') || {};
-      const phonologyTheoryExperience = preChoiceData.phonology_theory_experience || '';
-      const email = preChoiceData.email || '';
+      const phonologyTheoryExperience = preSurveyData.phonology_theory_experience || preChoiceData.phonology_theory_experience || '';
+      const email = preSurveyData.email || preChoiceData.email || preFormData.email || '';
       
-      let pronExperience = '';
+      let pronExperience = preSurveyData.pron_experience || '';
       if (preChoiceData.response) {
         let resp = preChoiceData.response;
         if (typeof resp === 'string') {
@@ -741,19 +785,27 @@
           pronExperience = resp;
         }
       }
+
+      if (!pronExperience && preChoiceData.pron_experience) {
+        pronExperience = preChoiceData.pron_experience;
+      }
       
-      const preInstData = allData.find(r => r.task === 'pre_survey_institution') || {};
       let institution = '';
+      if (preSurveyData.institution) {
+        institution = preSurveyData.institution;
+      }
       if (preInstData.response) {
         let resp = preInstData.response;
         if (typeof resp === 'string') {
           try { resp = JSON.parse(resp); } catch(e) {}
         }
         if (resp && typeof resp === 'object') {
-          institution = resp.institution || '';
+          institution = institution || resp.institution || '';
         } else {
-          institution = resp || '';
+          institution = institution || resp || '';
         }
+      } else if (preInstData.institution) {
+        institution = institution || preInstData.institution;
       }
 
       // ===================== Build map for stimulus -> trial data =====================
@@ -928,6 +980,7 @@
         submission_id: submissionId,
         native_language: nativeLanguage,
         respondent_data: resultRow,
+        pre_survey_snapshot: preSurveyData,
         detailed_results: detailedRows
       };
 
@@ -1651,6 +1704,11 @@
     stimulus: '',
     choices: 'NO_KEYS',
     data: { task: 'pre_survey_wizard' },
+    on_finish: function(data) {
+      if (confirmedPreSurveyData && typeof confirmedPreSurveyData === 'object') {
+        Object.assign(data, confirmedPreSurveyData);
+      }
+    },
     on_load: function() {
       const displayElement = document.getElementById('jspsych-content');
 
@@ -2175,6 +2233,21 @@
           const finalLanguageMetrics = computeLanguageMetrics(state.learnedLanguages);
           const finalEmail = getEmail();
           const finalInstitution = state.pronExperience === '有' ? state.institution.trim() : '';
+
+          savePreSurveyCache({
+            study_year: state.studyYear,
+            study_month: state.studyMonth,
+            stay_year: state.stayYear,
+            stay_month: state.stayMonth,
+            native_language: state.nativeLanguage,
+            japanese_language_order: finalLanguageMetrics.japaneseLanguageOrder,
+            total_languages_learned: finalLanguageMetrics.totalLanguagesLearned,
+            learned_languages_list: finalLearnedLanguagesList,
+            phonology_theory_experience: state.phonologyTheoryExperience,
+            pron_experience: state.pronExperience,
+            institution: finalInstitution,
+            email: finalEmail
+          });
 
           jsPsych.data.write({
             task: 'pre_survey_form',
