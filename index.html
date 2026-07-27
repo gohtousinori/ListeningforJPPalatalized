@@ -284,6 +284,10 @@
       const stayYear = preFormData.stay_year || '';
       const stayMonth = preFormData.stay_month || '';
       const nativeLanguage = preFormData.native_language || '';
+      const japaneseLanguageOrder = preFormData.japanese_language_order || '';
+      const totalLanguagesLearned = preFormData.total_languages_learned || '';
+      const learnedLanguagesList = preFormData.learned_languages_list || '';
+      const phonologyTheoryExperience = preFormData.phonology_theory_experience || '';
       const email = preFormData.email || '';
       
       const preChoiceData = allData.find(r => r.task === 'pre_survey_choice') || {};
@@ -326,6 +330,10 @@
       const resultRow = {
         'Email': email,
         '母語 / Native language': nativeLanguage,
+        '日本語は第何言語か（300時間以上） / Japanese language order (300+ study hours)': japaneseLanguageOrder,
+        '学習経験のある言語数（合計） / Total number of languages learned': totalLanguagesLearned,
+        '学習言語リスト（母語含む、学習順） / Learned languages list (including L1, in study order)': learnedLanguagesList,
+        '音韻論・音声学（理論）学習経験 / Academic-theoretical phonology/phonetics experience': phonologyTheoryExperience,
         '日本語学習期間（年） / JP learning years': studyYear,
         '日本語学習期間（月） / JP learning months': studyMonth,
         '日本滞在期間（年） / Years lived in Japan': stayYear,
@@ -422,6 +430,10 @@
     【基本情報 / Basic Information】
     - Email: ${email}
     - 母語 / Native language: ${nativeLanguage}
+    - 日本語は第何言語か（300時間以上）: ${japaneseLanguageOrder}
+    - 学習経験のある言語数（合計）: ${totalLanguagesLearned}
+    - 学習言語リスト（母語含む、学習順）: ${learnedLanguagesList}
+    - 音韻論・音声学（理論）学習経験: ${phonologyTheoryExperience}
     - 日本語学習（年）: ${studyYear}
     - 日本語学習（月）: ${studyMonth}
     - 日本滞在（年）: ${stayYear}
@@ -490,7 +502,7 @@
         if (result.success && !result.fallback) {
           alert('✓ Your responses have been submitted to Google Sheets successfully.\n\nHTTP Status: ' + response.status + '\n\nResultPattern.csv has also been downloaded to your Downloads folder.');
         } else if (result.success && result.fallback) {
-          alert('✓ Your responses were sent using fallback mode (' + result.fallback + ').\n\nThis browser may restrict direct access to the response body; however, the data has been transmitted from your device.\n\nPlease verify the entry in Google Sheets after 10-30 seconds.\n\nCSV download completed.');
+          alert('✓ Your responses were sent using fallback mode (' + result.fallback + ').\n\nThis browser may restrict direct access to the response body; however, the data has been transmitted from your device.\n\nPlease verify the entry in Google Sheets within 1-2 minutes.\n\nCSV download completed.');
         } else {
           alert('⚠️ An error occurred while submitting data to Google Sheets.\n\nHTTP Status: ' + response.status + '\nDetails: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV download completed.');
         }
@@ -604,6 +616,24 @@
         const monthLabel = m === 1 ? 'month' : 'months';
         monthOptions += `<option value="${m}">${m} ${monthLabel} / ${m} ヶ月</option>`;
       }
+      let languageOrderOptions = '<option value="">Select / 選択してください</option>';
+      for (let n = 1; n <= 10; n++) {
+        const ordinal = n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th';
+        languageOrderOptions += `<option value="${n}">${n}${ordinal} language / 第${n}言語</option>`;
+      }
+      languageOrderOptions += '<option value="11+">11th or later / 第11言語以降</option>';
+
+      let totalLanguagesOptions = '<option value="">Select / 選択してください</option>';
+      for (let n = 1; n <= 20; n++) {
+        const label = n === 1 ? 'language' : 'languages';
+        totalLanguagesOptions += `<option value="${n}">${n} ${label}</option>`;
+      }
+      totalLanguagesOptions += '<option value="21+">21 or more languages / 21言語以上</option>';
+
+      let phonologyTheoryOptions = '<option value="">Select / 選択してください</option>';
+      phonologyTheoryOptions += '<option value="無">無 / No</option>';
+      phonologyTheoryOptions += '<option value="有">有 / Yes</option>';
+
       monthOptions += '<option value="3">Not sure (about 0-6 months) / 不確定(約0-6か月)</option>';
       monthOptions += '<option value="9">Not sure (about 6-12 months) / 不確定(約6-12か月)</option>';
       const nativeLanguageOptions = [
@@ -626,7 +656,7 @@
         'Lao (ພາສາລາວ)',
         'Burmese (မြန်မာဘာသာ)',
         'Turkish (Türkçe)',
-        { label: '----- Chinese -----', disabled: true },
+        { label: '----- Chinese Languages -----', disabled: true },
         'Chinese, Mandarin (中文/普通话)',
         'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
         'Chinese, Cantonese (中文/廣東話)',
@@ -638,15 +668,18 @@
         'Tamil (தமிழ்)',
         'Marathi (मराठी)',
         'Gujarati (ગુજરાતી)',
-        { label: '----- Europe -----', disabled: true },
+        { label: '----- European and American Languages -----', disabled: true },
         'English (US)',
         'English (UK)',
         'French (Français)',
+        'French, Canadian (Français canadien)',
         'German (Deutsch)',
         'Hungarian (Magyar)',
         'Italian (Italiano)',
         'Spanish (español)',
         'Portuguese (português)',
+        'Portuguese, Brazilian (Português do Brasil)',
+        'Haitian Creole (Kreyòl Ayisyen)',
         'Danish (Dansk)',
         'Finnish (Suomi)',
         'Norwegian (Norsk)',
@@ -671,25 +704,21 @@
         'Croatian (Hrvatski)',
         'Bosnian (Bosanski)',
         'Serbian (Српски)',
-        { label: '----- Middle East -----', disabled: true },
+        { label: '----- Middle Eastern Languages -----', disabled: true },
         'Arabic (العربية)',
         'Persian, Farsi (فارسی)',
         'Urdu (اردو)',
         'Hebrew (עברית)',
         'Kurdish (Kurdî)',
         'Armenian (Հայերեն)',
-        { label: '----- Africa -----', disabled: true },
+        { label: '----- African Languages -----', disabled: true },
         'Swahili (Kiswahili)',
         'Amharic (አማርኛ)',
         'Somali (Soomaali)',
         'Hausa (Hausa)',
         'Yoruba (Yorùbá)',
         'Zulu (isiZulu)',
-        { label: '----- Americas -----', disabled: true },
-        'Portuguese, Brazilian (Português do Brasil)',
-        'French, Canadian (Français canadien)',
-        'Haitian Creole (Kreyòl Ayisyen)',
-        { label: '----- Oceania -----', disabled: true },
+        { label: '----- Oceanian Languages -----', disabled: true },
         'Maori (Te Reo Māori)',
         
       ];
@@ -725,6 +754,42 @@
             <select id="native_language">${nativeLanguageSelect}</select>
           </div>
 
+          <label><strong>日本語は、あなたにとって第何言語ですか（300時間以上学習した言語のみで数えてください）。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate the order of Japanese among your languages, counting only languages for which you have studied at least 300 hours.</div>
+          <div style="margin:8px 0">
+            <select id="japanese_language_order">${languageOrderOptions}</select>
+          </div>
+
+          <label><strong>これまでに学習した言語の総数を選択してください。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please select the total number of languages you have studied.</div>
+          <div style="margin:8px 0">
+            <select id="total_languages_learned">${totalLanguagesOptions}</select>
+          </div>
+
+          <label><strong>学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please add all languages you have learned (including your native language) in chronological order of learning. The first item must be your native language.</div>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please use standardized language names whenever available. If a language is not listed, please add it manually.</div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="learned_language_picker" style="min-width:300px; max-width:100%;">${nativeLanguageSelect}</select>
+            <button type="button" id="add_learned_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add from list / リストから追加</button>
+          </div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input id="learned_language_custom" type="text" placeholder="Custom language (if not listed) / 自由入力（リストにない場合）" style="width:100%; max-width:500px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+            <button type="button" id="add_custom_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Add custom / 自由入力を追加</button>
+          </div>
+          <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button type="button" id="add_native_first_btn" style="padding:6px 12px; background:#333; color:#fff; border:1px solid #666; border-radius:4px; cursor:pointer;">Add native language as first item / 母語を先頭に追加</button>
+          </div>
+          <div style="margin-top:8px; color:#ccc; font-size:0.9em;">Current order / 現在の順序</div>
+          <ol id="learned_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
+          <input id="learned_languages_list" type="hidden" value="" />
+
+          <label><strong>音韻論・音声学の学術的・理論的な学習経験はありますか。</strong></label>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Do you have academic and/or theoretical training in phonology and/or phonetics?</div>
+          <div style="margin:8px 0">
+            <select id="phonology_theory_experience">${phonologyTheoryOptions}</select>
+          </div>
+
           <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
           必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
@@ -746,16 +811,138 @@
     data: { task: 'pre_survey_form' },
     on_load: function() {
       const btn = document.getElementById('preSurveyFormBtn');
+      const learnedLanguagePicker = document.getElementById('learned_language_picker');
+      const learnedLanguageCustom = document.getElementById('learned_language_custom');
+      const addLearnedLanguageBtn = document.getElementById('add_learned_language_btn');
+      const addCustomLanguageBtn = document.getElementById('add_custom_language_btn');
+      const addNativeFirstBtn = document.getElementById('add_native_first_btn');
+      const learnedLanguagesOrdered = document.getElementById('learned_languages_ordered');
+      const learnedLanguagesHidden = document.getElementById('learned_languages_list');
+      const totalLanguagesSelect = document.getElementById('total_languages_learned');
+      const selectedLearnedLanguages = [];
+
+      const renderLearnedLanguages = () => {
+        learnedLanguagesOrdered.innerHTML = '';
+
+        selectedLearnedLanguages.forEach((language, index) => {
+          const li = document.createElement('li');
+          li.style.margin = '6px 0';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = language;
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove';
+          removeBtn.style.marginLeft = '10px';
+          removeBtn.style.padding = '2px 8px';
+          removeBtn.style.background = '#222';
+          removeBtn.style.color = '#fff';
+          removeBtn.style.border = '1px solid #555';
+          removeBtn.style.borderRadius = '4px';
+          removeBtn.style.cursor = 'pointer';
+          removeBtn.addEventListener('click', () => {
+            selectedLearnedLanguages.splice(index, 1);
+            renderLearnedLanguages();
+          });
+
+          li.appendChild(labelSpan);
+          li.appendChild(removeBtn);
+          learnedLanguagesOrdered.appendChild(li);
+        });
+
+        learnedLanguagesHidden.value = selectedLearnedLanguages.join(', ');
+
+        if (totalLanguagesSelect) {
+          const count = selectedLearnedLanguages.length;
+          if (count >= 1 && count <= 20) {
+            totalLanguagesSelect.value = String(count);
+          } else if (count > 20) {
+            totalLanguagesSelect.value = '21+';
+          }
+        }
+      };
+
+      const addLearnedLanguage = (value) => {
+        const language = (value || '').trim();
+        if (!language) return;
+
+        if (selectedLearnedLanguages.includes(language)) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'This language has already been added.\n同じ言語は既に追加されています。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        selectedLearnedLanguages.push(language);
+        const errorDiv = document.getElementById('validationError');
+        errorDiv.style.display = 'none';
+        renderLearnedLanguages();
+      };
+
+      addLearnedLanguageBtn.addEventListener('click', function() {
+        addLearnedLanguage(learnedLanguagePicker?.value || '');
+      });
+
+      addCustomLanguageBtn.addEventListener('click', function() {
+        addLearnedLanguage(learnedLanguageCustom?.value || '');
+        if (learnedLanguageCustom) learnedLanguageCustom.value = '';
+      });
+
+      addNativeFirstBtn.addEventListener('click', function() {
+        const nativeLanguage = document.getElementById('native_language')?.value || '';
+        if (!nativeLanguage) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'Please select your native language first.\n先に母語を選択してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        const existingIndex = selectedLearnedLanguages.indexOf(nativeLanguage);
+        if (existingIndex !== -1) {
+          selectedLearnedLanguages.splice(existingIndex, 1);
+        }
+        selectedLearnedLanguages.unshift(nativeLanguage);
+
+        const errorDiv = document.getElementById('validationError');
+        errorDiv.style.display = 'none';
+        renderLearnedLanguages();
+      });
+
       btn.addEventListener('click', function() {
         const study_year = document.getElementById('study_year')?.value || '';
         const study_month = document.getElementById('study_month')?.value || '';
         const stay_year = document.getElementById('stay_year')?.value || '';
         const stay_month = document.getElementById('stay_month')?.value || '';
         const native_language = document.getElementById('native_language')?.value || '';
+        const japanese_language_order = document.getElementById('japanese_language_order')?.value || '';
+        const total_languages_learned = document.getElementById('total_languages_learned')?.value || '';
+        const learned_languages_list_raw = document.getElementById('learned_languages_list')?.value || '';
+        const learned_languages_list = learned_languages_list_raw
+          .split(/\r?\n|,/)
+          .map(item => item.trim())
+          .filter(Boolean)
+          .join(', ');
+        const phonology_theory_experience = document.getElementById('phonology_theory_experience')?.value || '';
         
-        if (!study_year || !study_month || !stay_year || !stay_month || !native_language) {
+        if (!study_year || !study_month || !stay_year || !stay_month || !native_language || !japanese_language_order || !total_languages_learned || !learned_languages_list || !phonology_theory_experience) {
           const errorDiv = document.getElementById('validationError');
           errorDiv.innerText = 'Please complete all required fields.\n必須項目を選択してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        const learnedItems = learned_languages_list.split(',').map(s => s.trim()).filter(Boolean);
+        if (learnedItems.length === 0) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'Please add at least one learned language.\n学習言語を少なくとも1つ追加してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        if (learnedItems[0] !== native_language) {
+          const errorDiv = document.getElementById('validationError');
+          errorDiv.innerText = 'The first language in the list must be your native language.\nリストの最初は必ず母語にしてください。';
           errorDiv.style.display = 'block';
           return;
         }
@@ -764,7 +951,19 @@
         const domain = document.getElementById('email_domain')?.value || '';
         const tld = document.getElementById('email_tld')?.value || '';
         const email = (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
-        jsPsych.data.write({ task: 'pre_survey_form', study_year, study_month, stay_year, stay_month, native_language, email });
+        jsPsych.data.write({
+          task: 'pre_survey_form',
+          study_year,
+          study_month,
+          stay_year,
+          stay_month,
+          native_language,
+          japanese_language_order,
+          total_languages_learned,
+          learned_languages_list,
+          phonology_theory_experience,
+          email
+        });
         jsPsych.finishTrial();
       });
     }
@@ -777,7 +976,7 @@
     type: jsPsychSurveyText,
     questions: [
       {
-        prompt: 'Have you undertaken Japanese pronunciation study at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
+        prompt: 'Have you received systematic Japanese pronunciation instruction at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）',
         name: 'institution',
         placeholder: '受講した場合は機関名を入力',
         required: false
@@ -988,7 +1187,7 @@
     type: jsPsychSurveyText,
     questions: [
       {
-        prompt: '<div style="margin-bottom: 15px;"><strong>Please enter the perceived sound in romaji below.</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">e.g., di, ti, fi, ri</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>If the perceived sound differs from the provided options:</strong><br/>If you hear "si", enter si<br/>If you hear "ti", enter ti<br/>If you hear "fi", enter fi<br/><br/>補足：<br/>想定された選択肢と異なる音に聞こえた場合は、si・ti・fi などをご入力ください。</span></div>',
+        prompt: '<div style="margin-bottom: 15px;"><strong>Please enter the sound you heard in romaji below.</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">e.g., di, ti, fi, ri</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>If the perceived sound differs from the provided options:</strong><br/>If you hear "si", enter <strong>si</strong>.<br/>If you hear "ti", enter <strong>ti</strong>.<br/>If you hear "fi", enter <strong>fi</strong>.<br/><br/>補足：<br/>想定された選択肢と異なる音に聞こえた場合は、si・ti・fi などをご入力ください。</span></div>',
         name: 'other_sound',
         placeholder: 'Enter romaji / ローマ字を入力',
         required: true
@@ -1054,7 +1253,7 @@
         <h2 style="text-align: center;">本番テスト開始 / Main Test Start</h2>
         <p>The main test will now begin.</p>
         <p>From this point onward, all responses will be recorded and used for analysis.</p>
-        <p>これより本番のテストを開始いたします。これからの解答はすべて記録され、結果の算出に使用されます。</p>
+        <p>これより本番のテストを開始いたします。これからの回答はすべて記録され、結果の算出に使用されます。</p>
       </div>
     `,
     choices: ['本番テスト開始 / Begin main test'],
@@ -1074,15 +1273,17 @@
   const debrief = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <p>"Thank you very much for your participation. Your responses are of great value to this study. We sincerely wish you continued success and good health."</p>
-      <p style="margin-top: 20px; color: #999;">「ご協力いただき、ありがとうございました。皆様の貴重なご意見は、本研究の遂行に大変役立たせていただきます。皆様のますますのご活躍とご健康をお祈りしております。」</p>
+      <p>Thank you very much for your participation. Your responses are of great value to this study. We sincerely wish you continued success and good health.</p>
+      <p style="margin-top: 20px; color: #999;">ご協力いただき、誠にありがとうございました。皆様の貴重なご回答は、本研究の遂行に大変有益です。皆様の今後ますますのご活躍とご健勝をお祈り申し上げます。</p>
       <div style="margin-top: 24px; padding: 16px 20px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 6px; font-size: 14px; line-height: 1.8; text-align: left;">
         <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 備考 / Note</strong></p>
         <p style="margin: 0 0 6px 0;">When you press the button below, a <strong>response data file</strong> will be downloaded automatically.<br>
+        Submitting your data to the server may take up to <strong>2 minutes</strong>, depending on network conditions. Please wait until the completion message appears.<br>
         Please retain this file in case of server or network issues; the researcher may request it at a later date via email:<br>
         <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
         <hr style="border-color: rgba(255,255,255,0.15); margin: 10px 0;"/>
         <p style="margin: 0; color: #ccc;">送信ボタンを押すと、<strong>回答データファイル（ResultPattern.csv）</strong>が自動的にダウンロードされます。<br>
+        ネットワーク状況により、サーバーへの送信には<strong>最大2分程度</strong>かかる場合があります。完了メッセージが表示されるまでお待ちください。<br>
         サーバーやインターネット接続に問題が生じた場合に備え、このファイルを保管しておいてください。<br>
         後日、研究者よりファイルの提供をお願いする場合がございます。<br>
         連絡先: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
