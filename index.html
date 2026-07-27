@@ -197,6 +197,62 @@
       font-weight: 500;
     }
 
+    #ouFooter {
+      position: fixed;
+      right: 14px;
+      bottom: 12px;
+      max-width: min(600px, calc(100vw - 28px));
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(183, 209, 243, 0.24);
+      background: rgba(7, 18, 35, 0.36);
+      backdrop-filter: blur(7px);
+      color: #ffffff;
+      text-align: right;
+      line-height: 1.38;
+      font-size: 0.76rem;
+      text-shadow: 0 1px 10px rgba(4, 11, 22, 0.68);
+      z-index: 19;
+      pointer-events: none;
+    }
+
+    #ouFooter .footer-layout {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    #ouFooter .footer-text {
+      min-width: 0;
+      text-align: right;
+    }
+
+    #ouFooter .footer-line {
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    #ouFooter .footer-line + .footer-line {
+      margin-top: 6px;
+    }
+
+    #ouFooter strong {
+      font-weight: 700;
+    }
+
+    #ouFooter .footer-logo {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      padding: 4px;
+      box-shadow: 0 8px 18px rgba(6, 17, 34, 0.32);
+      align-self: flex-end;
+    }
+
     @media (max-width: 760px) {
       #jspsych-content {
         margin-top: 88px;
@@ -212,6 +268,19 @@
       #ouBrandHeader img {
         width: 36px;
         height: 36px;
+      }
+
+      #ouFooter {
+        right: 10px;
+        bottom: 10px;
+        font-size: 0.69rem;
+        max-width: calc(100vw - 20px);
+        padding: 8px 9px;
+      }
+
+      #ouFooter .footer-logo {
+        width: 46px;
+        height: 46px;
       }
     }
   </style>
@@ -234,6 +303,34 @@
   }
 
   mountBrandHeader();
+
+  function mountFooter() {
+    if (document.getElementById('ouFooter')) return;
+
+    const footer = document.createElement('div');
+    footer.id = 'ouFooter';
+    footer.innerHTML = `
+      <div class="footer-layout">
+        <div class="footer-text">
+          <p class="footer-line"># 日本語学習者におけるイ段音（単音／拗音）
+の口蓋化子音の聴取困難
+— 大規模横断調査による要因分析と教育への示唆 —</p>
+          <p class="footer-line">Perceptual difficulty of palatalized consonants in i-row sounds (monophthong / contracted forms)
+among learners of Japanese
+— Factor analysis based on a large-scale cross-sectional study and pedagogical implications —</p>
+          <p class="footer-line"><strong>ご質問やお問い合わせ / Contact:</strong></p>
+          <p class="footer-line">(+81)070-9192-6459</p>
+          <p class="footer-line">u548378a@ecs.osaka-u.ac.jp</p>
+          <p class="footer-line">ケハナン アカラポン (Akarapong Kehanan)</p>
+          <p class="footer-line">大阪大学大学院 人文学研究科 博士後期課程</p>
+        </div>
+        <img class="footer-logo" src="ou_logo.png" alt="Osaka University logo" />
+      </div>
+    `;
+    document.body.appendChild(footer);
+  }
+
+  mountFooter();
 
   // ========================================
   // Mapping: stimulus (kana) -> audio filename (romaji, no extension)
@@ -1933,18 +2030,18 @@
           <div style="color:#fff; text-align:left; max-width:900px; margin:0 auto;">
             <h2 style="text-align:center; margin-top:0;">確認 / Confirmation</h2>
             <div style="background:#111; border:1px solid #444; border-radius:8px; padding:18px 20px; line-height:1.8;">
-              <h3 style="margin-top:0;">1. 基本情報</h3>
-              <div><strong>学習期間:</strong> ${state.studyYear} year(s) / ${state.studyMonth} month(s)</div>
-              <div><strong>滞在期間:</strong> ${state.stayYear} year(s) / ${state.stayMonth} month(s)</div>
-              <div><strong>母語:</strong> ${state.nativeLanguage}</div>
-              <h3>2. 学習言語リスト</h3>
-              <div><strong>学習順:</strong> ${learnedLanguagesList || '(none)'}</div>
-              <div><strong>日本語の順番:</strong> ${languageMetrics.japaneseLanguageOrder || '(not found)'}</div>
-              <div><strong>学習言語数:</strong> ${languageMetrics.totalLanguagesLearned || '(not found)'}</div>
-              <h3>3. その他</h3>
-              <div><strong>音韻論・音声学の学習経験:</strong> ${state.phonologyTheoryExperience}</div>
-              <div><strong>発音学習の経験:</strong> ${state.pronExperience}</div>
-              <div><strong>受講機関:</strong> ${institution || '(none)'}</div>
+              <h3 style="margin-top:0;">1. 基本情報 / Basic Information</h3>
+              <div><strong>学習期間 / Study duration:</strong> ${state.studyYear} year(s) / ${state.studyMonth} month(s)</div>
+              <div><strong>滞在期間 / Residence duration in Japan:</strong> ${state.stayYear} year(s) / ${state.stayMonth} month(s)</div>
+              <div><strong>母語 / Native language:</strong> ${state.nativeLanguage}</div>
+              <h3>2. 学習言語リスト / Learned Language List</h3>
+              <div><strong>学習順 / Learning order:</strong> ${learnedLanguagesList || '(none)'}</div>
+              <div><strong>日本語の順番 / Japanese language order:</strong> ${languageMetrics.japaneseLanguageOrder || '(not found)'}</div>
+              <div><strong>学習言語数 / Total learned languages:</strong> ${languageMetrics.totalLanguagesLearned || '(not found)'}</div>
+              <h3>3. その他 / Other Information</h3>
+              <div><strong>音韻論・音声学の学習経験 / Phonology-phonetics training:</strong> ${state.phonologyTheoryExperience}</div>
+              <div><strong>発音学習の経験 / Pronunciation training experience:</strong> ${state.pronExperience}</div>
+              <div><strong>受講機関 / Institution:</strong> ${institution || '(none)'}</div>
               <div><strong>Email:</strong> ${email || '(none)'}</div>
             </div>
             <div style="margin-top:18px; color:#ccc; font-size:0.95em; line-height:1.7;">
