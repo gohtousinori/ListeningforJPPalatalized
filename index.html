@@ -23,6 +23,8 @@
       --accent-strong: #85abde;
       --focus-ring: rgba(133, 171, 222, 0.45);
       --shadow: 0 22px 50px rgba(1, 7, 18, 0.5);
+      --brand-header-space: 88px;
+      --brand-footer-space: 92px;
     }
 
     * { box-sizing: border-box; }
@@ -70,7 +72,7 @@
     }
 
     #jspsych-content {
-      margin-top: 72px;
+      margin-top: 0;
       border: 1px solid var(--panel-border);
       background: var(--panel);
       box-shadow: var(--shadow);
@@ -81,7 +83,7 @@
     }
 
     .jspsych-content-wrapper {
-      padding: 26px 12px 40px;
+      padding: calc(var(--brand-header-space) + 14px) 12px calc(var(--brand-footer-space) + 24px);
     }
 
     h1, h2, h3 {
@@ -272,7 +274,6 @@
 
     @media (max-width: 760px) {
       #jspsych-content {
-        margin-top: 88px;
         border-radius: 12px;
         padding: 20px 16px;
       }
@@ -364,6 +365,53 @@
     mountTopCredit();
     mountBrandHeader();
     mountFooter();
+    syncBrandingLayoutSpacing();
+  }
+
+  function syncBrandingLayoutSpacing() {
+    const root = document.documentElement;
+    const header = document.getElementById('ouBrandHeader');
+    const footer = document.getElementById('ouFooter');
+
+    const headerHeight = header
+      ? Math.ceil(header.getBoundingClientRect().height) + 18
+      : 88;
+    const footerHeight = footer
+      ? Math.ceil(footer.getBoundingClientRect().height) + 18
+      : 92;
+
+    root.style.setProperty('--brand-header-space', `${headerHeight}px`);
+    root.style.setProperty('--brand-footer-space', `${footerHeight}px`);
+  }
+
+  let brandingLayoutSyncStarted = false;
+  function startBrandingLayoutSync() {
+    if (brandingLayoutSyncStarted) return;
+    brandingLayoutSyncStarted = true;
+
+    window.addEventListener('resize', syncBrandingLayoutSpacing);
+    window.addEventListener('orientationchange', syncBrandingLayoutSpacing);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncBrandingLayoutSpacing);
+    }
+
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(function() {
+        syncBrandingLayoutSpacing();
+      });
+
+      const tryObserve = () => {
+        const header = document.getElementById('ouBrandHeader');
+        const footer = document.getElementById('ouFooter');
+        if (header) resizeObserver.observe(header);
+        if (footer) resizeObserver.observe(footer);
+      };
+
+      tryObserve();
+      setTimeout(tryObserve, 0);
+    }
+
+    syncBrandingLayoutSpacing();
   }
 
   let brandingObserverStarted = false;
@@ -375,6 +423,7 @@
       if (!document.getElementById('ouTopCredit') || !document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
         ensurePersistentBranding();
       }
+      syncBrandingLayoutSpacing();
     });
 
     observer.observe(document.body, { childList: true });
@@ -382,6 +431,7 @@
 
   ensurePersistentBranding();
   startBrandingObserver();
+  startBrandingLayoutSync();
 
   // ========================================
   // Mapping: stimulus (kana) -> audio filename (romaji, no extension)
@@ -625,9 +675,11 @@
   const jsPsych = initJsPsych({
     on_trial_start: function() {
       ensurePersistentBranding();
+      syncBrandingLayoutSpacing();
     },
     on_finish: function() {
       ensurePersistentBranding();
+      syncBrandingLayoutSpacing();
       const allData = jsPsych.data.get().values();
       const responseRows = allData.filter(r => r.task === 'response');
       
