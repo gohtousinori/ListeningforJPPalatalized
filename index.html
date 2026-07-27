@@ -47,8 +47,8 @@
       background-position: center;
       background-size: cover;
       background-repeat: no-repeat;
-      opacity: 0.22;
-      filter: saturate(0.92) contrast(1.07);
+      opacity: 0.28;
+      filter: saturate(1.14) contrast(1.08) brightness(1.03);
       z-index: -2;
       pointer-events: none;
     }
@@ -197,20 +197,36 @@
       font-weight: 500;
     }
 
+    #ouTopCredit {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-shadow: 0 1px 8px rgba(3, 10, 20, 0.52);
+      z-index: 21;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
     #ouFooter {
       position: fixed;
-      right: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      right: auto;
       bottom: 12px;
-      max-width: min(600px, calc(100vw - 28px));
-      padding: 10px 12px;
-      border-radius: 10px;
+      width: min(980px, calc(100vw - 24px));
+      padding: 9px 12px;
+      border-radius: 12px;
       border: 1px solid rgba(183, 209, 243, 0.24);
-      background: rgba(7, 18, 35, 0.36);
+      background: rgba(7, 18, 35, 0.62);
       backdrop-filter: blur(7px);
       color: #ffffff;
-      text-align: right;
-      line-height: 1.38;
-      font-size: 0.76rem;
+      text-align: left;
+      line-height: 1.3;
+      font-size: 0.72rem;
       text-shadow: 0 1px 10px rgba(4, 11, 22, 0.68);
       z-index: 19;
       pointer-events: none;
@@ -218,23 +234,24 @@
 
     #ouFooter .footer-layout {
       display: flex;
-      align-items: flex-end;
-      justify-content: flex-end;
-      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     #ouFooter .footer-text {
       min-width: 0;
-      text-align: right;
+      flex: 1 1 auto;
+      text-align: left;
     }
 
     #ouFooter .footer-line {
       margin: 0;
-      white-space: pre-line;
+      white-space: normal;
     }
 
     #ouFooter .footer-line + .footer-line {
-      margin-top: 6px;
+      margin-top: 2px;
     }
 
     #ouFooter strong {
@@ -242,15 +259,15 @@
     }
 
     #ouFooter .footer-logo {
-      width: 58px;
-      height: 58px;
+      width: 44px;
+      height: 44px;
       object-fit: contain;
       flex: 0 0 auto;
-      border-radius: 10px;
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.94);
-      padding: 4px;
+      padding: 3px;
       box-shadow: 0 8px 18px rgba(6, 17, 34, 0.32);
-      align-self: flex-end;
+      align-self: center;
     }
 
     @media (max-width: 760px) {
@@ -270,17 +287,31 @@
         height: 36px;
       }
 
-      #ouFooter {
-        right: 10px;
-        bottom: 10px;
-        font-size: 0.69rem;
+      #ouTopCredit {
+        top: 10px;
+        left: 10px;
+        font-size: 0.6rem;
         max-width: calc(100vw - 20px);
-        padding: 8px 9px;
+        white-space: normal;
+        line-height: 1.25;
+      }
+
+      #ouFooter {
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 10px;
+        width: calc(100vw - 16px);
+        font-size: 0.62rem;
+        padding: 7px 8px;
+      }
+
+      #ouFooter .footer-layout {
+        gap: 8px;
       }
 
       #ouFooter .footer-logo {
-        width: 46px;
-        height: 46px;
+        width: 34px;
+        height: 34px;
       }
     }
   </style>
@@ -302,6 +333,15 @@
     document.body.appendChild(header);
   }
 
+  function mountTopCredit() {
+    if (document.getElementById('ouTopCredit')) return;
+
+    const credit = document.createElement('div');
+    credit.id = 'ouTopCredit';
+    credit.textContent = 'Perception Test Module Developed by : KEHANAN Akarapong';
+    document.body.appendChild(credit);
+  }
+
   mountBrandHeader();
 
   function mountFooter() {
@@ -312,17 +352,7 @@
     footer.innerHTML = `
       <div class="footer-layout">
         <div class="footer-text">
-          <p class="footer-line"># 日本語学習者におけるイ段音（単音／拗音）
-の口蓋化子音の聴取困難
-— 大規模横断調査による要因分析と教育への示唆 —</p>
-          <p class="footer-line">Perceptual difficulty of palatalized consonants in i-row sounds (monophthong / contracted forms)
-among learners of Japanese
-— Factor analysis based on a large-scale cross-sectional study and pedagogical implications —</p>
-          <p class="footer-line"><strong>ご質問やお問い合わせ / Contact:</strong></p>
-          <p class="footer-line">(+81)070-9192-6459</p>
-          <p class="footer-line">u548378a@ecs.osaka-u.ac.jp</p>
-          <p class="footer-line">ケハナン アカラポン (Akarapong Kehanan)</p>
-          <p class="footer-line">大阪大学大学院 人文学研究科 博士後期課程</p>
+          <p class="footer-line"><strong>日本語学習者におけるイ段音（単音／拗音）の口蓋化子音の聴取困難</strong> / Perceptual difficulty of palatalized consonants in i-row sounds | <strong>Contact:</strong> (+81)070-9192-6459 | u548378a@ecs.osaka-u.ac.jp | ケハナン アカラポン (Akarapong Kehanan) | 大阪大学大学院 人文学研究科 博士後期課程</p>
         </div>
         <img class="footer-logo" src="ou_logo.png" alt="Osaka University logo" />
       </div>
@@ -331,6 +361,7 @@ among learners of Japanese
   }
 
   function ensurePersistentBranding() {
+    mountTopCredit();
     mountBrandHeader();
     mountFooter();
   }
@@ -341,7 +372,7 @@ among learners of Japanese
     brandingObserverStarted = true;
 
     const observer = new MutationObserver(function() {
-      if (!document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
+      if (!document.getElementById('ouTopCredit') || !document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
         ensurePersistentBranding();
       }
     });
