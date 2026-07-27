@@ -144,6 +144,35 @@
     return { response, result, responseText };
   }
 
+  async function postSubmissionFallback(payload) {
+    const bodyText = JSON.stringify(payload);
+
+    if (navigator.sendBeacon) {
+      const beaconBody = new Blob([bodyText], { type: 'text/plain;charset=utf-8' });
+      const accepted = navigator.sendBeacon(GOOGLE_SCRIPT_URL, beaconBody);
+      if (accepted) {
+        return {
+          response: { status: 0, statusText: 'sendBeacon accepted' },
+          result: { success: true, fallback: 'sendBeacon' },
+          responseText: ''
+        };
+      }
+    }
+
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: bodyText,
+      keepalive: true
+    });
+
+    return {
+      response: { status: 0, statusText: 'no-cors' },
+      result: { success: true, fallback: 'no-cors' },
+      responseText: ''
+    };
+  }
+
   async function submitWithRetry(payload, maxAttempts, retryDelayMs) {
     let attempt = 0;
     let lastError = null;
@@ -159,9 +188,28 @@
         return await postSubmission(payload);
       } catch (error) {
         lastError = error;
+
+        const isLastAttempt = attempt >= maxAttempts;
+        const isFetchNetworkError = error && error.message && error.message.toLowerCase().indexOf('failed to fetch') !== -1;
+
+        if (isLastAttempt && isFetchNetworkError) {
+          try {
+            const fallbackResult = await postSubmissionFallback(payload);
+            updateQueuedSubmission(payload.submission_id, {
+              attempts: attempt,
+              lastError: '',
+              lastAttemptAt: new Date().toISOString(),
+              fallbackUsed: fallbackResult.result.fallback
+            });
+            return fallbackResult;
+          } catch (fallbackError) {
+            lastError = fallbackError;
+          }
+        }
+
         updateQueuedSubmission(payload.submission_id, {
           attempts: attempt,
-          lastError: error.message,
+          lastError: (lastError && lastError.message) ? lastError.message : String(lastError || error),
           lastAttemptAt: new Date().toISOString()
         });
 
@@ -421,8 +469,10 @@
         removeQueuedSubmission(submissionId);
         downloadCsv();
 
-        if (result.success) {
+        if (result.success && !result.fallback) {
           alert('✓ ข้อมูลถูกส่งไปยัง Google Sheets เรียบร้อยแล้ว!\n\nHTTP Status: ' + response.status + '\n\nข้อมูล (ResultPattern.csv) ยังได้ดาวน์โหลดไปยังโฟลเดอร์ Downloads ของท่าน\n\n✓ Data sent to Google Sheets successfully!\n\nFile (ResultPattern.csv) also downloaded to your Downloads folder.');
+        } else if (result.success && result.fallback) {
+          alert('✓ ส่งข้อมูลผ่านโหมดสำรอง (' + result.fallback + ') เรียบร้อยแล้ว\n\nเบราว์เซอร์ของอุปกรณ์นี้บล็อกการอ่านผลตอบกลับโดยตรง แต่ข้อมูลถูกส่งออกจากเครื่องแล้ว\n\nกรุณาตรวจสอบใน Google Sheets ภายใน 10-30 วินาที\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
         } else {
           alert('⚠️ เกิดข้อผิดพลาดในการส่งไปยัง Google Sheets\n\nHTTP Status: ' + response.status + '\nรายละเอียด: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV ถูกดาวน์โหลดเรียบร้อยแล้ว');
         }
