@@ -1243,8 +1243,11 @@
     choices: ['同意する / I consent', '同意しません / I do not consent'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; margin: 12px;">%choice%</button>',
     on_load: function() {
-      const isDesktopLandscape = window.matchMedia && window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches;
-      if (!isDesktopLandscape) {
+      const shouldUsePinnedConsentLayout = window.matchMedia && (
+        window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches ||
+        window.matchMedia('(max-width: 760px)').matches
+      );
+      if (!shouldUsePinnedConsentLayout) {
         return;
       }
 
@@ -1257,26 +1260,37 @@
 
       contentCard.style.display = 'flex';
       contentCard.style.flexDirection = 'column';
-      contentCard.style.maxHeight = 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
+      contentCard.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
+        ? 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 12px - env(safe-area-inset-bottom))'
+        : 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
 
-      stimulusEl.style.maxHeight = 'min(62vh, 620px)';
+      stimulusEl.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
+        ? 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 128px - env(safe-area-inset-bottom))'
+        : 'min(62vh, 620px)';
       stimulusEl.style.overflowY = 'auto';
       stimulusEl.style.paddingRight = '6px';
 
       buttonGroup.style.display = 'grid';
       buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
       buttonGroup.style.gap = '12px';
-      buttonGroup.style.maxWidth = '720px';
+      buttonGroup.style.maxWidth = window.matchMedia('(max-width: 760px)').matches ? '100%' : '720px';
       buttonGroup.style.width = '100%';
       buttonGroup.style.margin = '12px auto 0';
       buttonGroup.style.position = 'sticky';
       buttonGroup.style.bottom = '0';
       buttonGroup.style.zIndex = '3';
-      buttonGroup.style.padding = '12px 10px';
+      buttonGroup.style.padding = window.matchMedia('(max-width: 760px)').matches ? '8px 0 0' : '12px 10px';
       buttonGroup.style.background = 'rgba(7, 18, 35, 0.96)';
       buttonGroup.style.border = '1px solid rgba(151, 183, 223, 0.28)';
       buttonGroup.style.borderRadius = '10px';
       buttonGroup.style.boxShadow = '0 8px 20px rgba(2, 8, 18, 0.42)';
+
+      if (window.matchMedia('(max-width: 760px)').matches) {
+        buttonGroup.style.background = 'transparent';
+        buttonGroup.style.border = '0';
+        buttonGroup.style.borderRadius = '0';
+        buttonGroup.style.boxShadow = 'none';
+      }
 
       Array.from(buttonGroup.children).forEach((choiceWrapper) => {
         choiceWrapper.style.margin = '0';
