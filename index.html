@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>日本語音声聴覚識別調査 / Japanese Speech Perception Study</title>
   <script src="https://unpkg.com/jspsych@7.3.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
@@ -25,6 +26,14 @@
       --shadow: 0 22px 50px rgba(1, 7, 18, 0.5);
       --brand-header-space: 88px;
       --brand-footer-space: 92px;
+      --ui-font-base: clamp(15px, 0.45vw + 13px, 19px);
+      --ui-font-small: clamp(13px, 0.32vw + 11.5px, 16px);
+      --ui-font-heading-1: clamp(21px, 1vw + 16px, 34px);
+      --ui-font-heading-2: clamp(19px, 0.8vw + 15px, 30px);
+      --ui-font-heading-3: clamp(17px, 0.65vw + 14px, 24px);
+      --ui-control-height: clamp(46px, 1.35vw + 38px, 58px);
+      --ui-content-pad-y: clamp(16px, 1.05vw + 10px, 28px);
+      --ui-content-pad-x: clamp(12px, 1.1vw + 7px, 26px);
     }
 
     * { box-sizing: border-box; }
@@ -33,6 +42,7 @@
       margin: 0;
       color: var(--ink);
       font-family: 'IBM Plex Sans', 'Noto Sans JP', sans-serif;
+      font-size: var(--ui-font-base);
       background: radial-gradient(circle at 12% 8%, rgba(123, 163, 209, 0.24), transparent 45%),
                   radial-gradient(circle at 88% 16%, rgba(150, 190, 233, 0.16), transparent 38%),
                   linear-gradient(135deg, #020a15 0%, #071224 55%, #0b1a30 100%);
@@ -78,8 +88,10 @@
       box-shadow: var(--shadow);
       backdrop-filter: blur(12px);
       border-radius: 14px;
-      padding: 26px 24px;
+      padding: var(--ui-content-pad-y) var(--ui-content-pad-x);
       max-width: 960px;
+      font-size: var(--ui-font-base);
+      line-height: 1.5;
     }
 
     .jspsych-content-wrapper {
@@ -88,6 +100,30 @@
 
     h1, h2, h3 {
       letter-spacing: 0.02em;
+    }
+
+    #jspsych-content h1 {
+      font-size: var(--ui-font-heading-1);
+      line-height: 1.32;
+    }
+
+    #jspsych-content h2 {
+      font-size: var(--ui-font-heading-2);
+      line-height: 1.35;
+    }
+
+    #jspsych-content h3 {
+      font-size: var(--ui-font-heading-3);
+      line-height: 1.36;
+    }
+
+    #jspsych-content p,
+    #jspsych-content li,
+    #jspsych-content label,
+    #jspsych-content span,
+    #jspsych-content div {
+      font-size: var(--ui-font-base);
+      line-height: 1.5;
     }
 
     .jspsych-btn {
@@ -137,6 +173,63 @@
       border-radius: 7px;
       padding: 8px 9px;
       font-family: 'IBM Plex Sans', 'Noto Sans JP', sans-serif;
+    }
+
+    #jspsych-content .jspsych-btn,
+    #jspsych-content button:not(.jspsych-btn) {
+      min-height: var(--ui-control-height);
+      font-size: var(--ui-font-base);
+      line-height: 1.28;
+      padding: clamp(10px, 0.45vw + 8px, 14px) clamp(12px, 0.8vw + 8px, 18px);
+    }
+
+    #jspsych-content select,
+    #jspsych-content input[type="text"],
+    #jspsych-content input[type="email"],
+    #jspsych-content textarea {
+      min-height: var(--ui-control-height);
+      font-size: var(--ui-font-base);
+      width: min(100%, 100%);
+      line-height: 1.35;
+    }
+
+    #jspsych-content input::placeholder,
+    #jspsych-content textarea::placeholder {
+      font-size: var(--ui-font-small);
+    }
+
+    #jspsych-content [style*="font-size: 72px"] {
+      font-size: clamp(44px, 6vw + 18px, 72px) !important;
+    }
+
+    #jspsych-content [style*="font-size: 64px"] {
+      font-size: clamp(40px, 5.5vw + 16px, 64px) !important;
+    }
+
+    #jspsych-content [style*="font-size: 24px"] {
+      font-size: clamp(20px, 1vw + 16px, 28px) !important;
+    }
+
+    #jspsych-content [style*="font-size: 18px"] {
+      font-size: clamp(17px, 0.55vw + 14px, 23px) !important;
+    }
+
+    #jspsych-content [style*="font-size: 16px"] {
+      font-size: clamp(15px, 0.45vw + 13px, 20px) !important;
+    }
+
+    #jspsych-content [style*="font-size: 14px"] {
+      font-size: clamp(13px, 0.35vw + 11.5px, 17px) !important;
+    }
+
+    #jspsych-content [style*="padding: 30px 20px"],
+    #jspsych-content [style*="padding:30px 20px"] {
+      padding: clamp(16px, 1.4vw + 10px, 30px) clamp(12px, 1.05vw + 8px, 20px) !important;
+    }
+
+    #jspsych-content [style*="padding: 20px"],
+    #jspsych-content [style*="padding:20px"] {
+      padding: clamp(12px, 0.95vw + 8px, 20px) !important;
     }
 
     div[style*="background:#333"],
@@ -274,9 +367,83 @@
     }
 
     @media (max-width: 760px) {
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      :root {
+        --ui-font-base: clamp(15px, 1.05vw + 11px, 18px);
+        --ui-font-small: clamp(13px, 0.75vw + 10.5px, 15px);
+        --ui-control-height: clamp(50px, 1.7vw + 44px, 58px);
+      }
+
       #jspsych-content {
         border-radius: 12px;
-        padding: 20px 16px;
+        padding: 20px 14px;
+      }
+
+      #jspsych-content,
+      #jspsych-content p,
+      #jspsych-content li,
+      #jspsych-content label,
+      #jspsych-content span,
+      #jspsych-content div {
+        font-size: var(--ui-font-base) !important;
+        line-height: 1.5 !important;
+      }
+
+      #jspsych-content h1 {
+        font-size: var(--ui-font-heading-1) !important;
+        line-height: 1.35 !important;
+      }
+
+      #jspsych-content h2 {
+        font-size: var(--ui-font-heading-2) !important;
+        line-height: 1.35 !important;
+      }
+
+      #jspsych-content h3 {
+        font-size: var(--ui-font-heading-3) !important;
+        line-height: 1.35 !important;
+      }
+
+      #jspsych-content .jspsych-btn,
+      #jspsych-content button:not(.jspsych-btn) {
+        min-height: var(--ui-control-height) !important;
+        font-size: var(--ui-font-base) !important;
+        line-height: 1.25 !important;
+        padding: clamp(10px, 1vw + 8px, 14px) clamp(12px, 1.2vw + 8px, 16px) !important;
+      }
+
+      #jspsych-content .jspsych-html-button-response-button {
+        margin: 6px !important;
+      }
+
+      #jspsych-content select,
+      #jspsych-content input[type="text"],
+      #jspsych-content input[type="email"],
+      #jspsych-content textarea {
+        min-height: var(--ui-control-height) !important;
+        font-size: var(--ui-font-base) !important;
+        padding: clamp(10px, 0.9vw + 8px, 12px) clamp(10px, 1vw + 7px, 12px) !important;
+      }
+
+      #jspsych-content select,
+      #jspsych-content textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      #jspsych-content [id$="Btn"],
+      #jspsych-content [id$="_btn"],
+      #jspsych-content [id*="_next"],
+      #jspsych-content [id*="_back"] {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .jspsych-content-wrapper {
+        padding: calc(var(--brand-header-space) + 12px) 8px calc(var(--brand-footer-space) + 18px + env(safe-area-inset-bottom));
       }
 
       #ouBrandHeader {
@@ -315,6 +482,18 @@
       #ouFooter .footer-logo {
         width: 34px;
         height: 34px;
+      }
+    }
+
+    @media (min-width: 761px) and (max-width: 1100px) {
+      :root {
+        --ui-font-base: clamp(16px, 0.75vw + 12px, 19px);
+        --ui-font-small: clamp(13px, 0.55vw + 10px, 16px);
+        --ui-control-height: clamp(48px, 1.2vw + 40px, 56px);
+      }
+
+      #jspsych-content {
+        max-width: min(960px, calc(100vw - 24px));
       }
     }
   </style>
@@ -1054,6 +1233,32 @@
     `,
     choices: ['同意する / I consent', '同意しません / I do not consent'],
     button_html: '<button class="jspsych-btn" style="min-width: 150px; margin: 12px;">%choice%</button>',
+    on_load: function() {
+      const isDesktopLandscape = window.matchMedia && window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches;
+      if (!isDesktopLandscape) {
+        return;
+      }
+
+      const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
+      if (!buttonGroup) {
+        return;
+      }
+
+      buttonGroup.style.display = 'grid';
+      buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+      buttonGroup.style.gap = '12px';
+      buttonGroup.style.maxWidth = '720px';
+      buttonGroup.style.margin = '14px auto 0';
+
+      Array.from(buttonGroup.children).forEach((choiceWrapper) => {
+        choiceWrapper.style.margin = '0';
+        const button = choiceWrapper.querySelector('button.jspsych-btn');
+        if (button) {
+          button.style.width = '100%';
+          button.style.margin = '0';
+        }
+      });
+    },
     data: { task: 'title_and_notice' },
     on_finish: function(data) {
       data.consent = data.response === 0;
@@ -2446,10 +2651,7 @@
     choices: jsPsych.timelineVariable('choices'),
     button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
     on_load: function() {
-      if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) {
-        return;
-      }
-
+      const trialStartTime = performance.now();
       const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
       if (!buttonGroup) {
         return;
@@ -2457,9 +2659,42 @@
 
       buttonGroup.style.display = 'grid';
       buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
-      buttonGroup.style.gap = '10px';
-      buttonGroup.style.maxWidth = '100%';
+      buttonGroup.style.gap = '10px 12px';
+      buttonGroup.style.maxWidth = '760px';
+      buttonGroup.style.width = '100%';
       buttonGroup.style.margin = '12px auto 0';
+
+      const otherInlineContainer = document.createElement('div');
+      otherInlineContainer.id = 'inline-other-container';
+      otherInlineContainer.style.display = 'none';
+      otherInlineContainer.style.marginTop = '16px';
+      otherInlineContainer.style.padding = '14px';
+      otherInlineContainer.style.border = '1px solid rgba(255, 204, 0, 0.38)';
+      otherInlineContainer.style.borderRadius = '8px';
+      otherInlineContainer.style.background = 'rgba(255, 204, 0, 0.08)';
+      otherInlineContainer.style.maxWidth = '760px';
+      otherInlineContainer.style.marginLeft = 'auto';
+      otherInlineContainer.style.marginRight = 'auto';
+      otherInlineContainer.innerHTML = `
+        <div style="margin-bottom: 10px; line-height: 1.6; text-align: left;">
+          <strong>Please enter the sound you heard in romaji.</strong><br>
+          <span style="display:block; margin-top:6px;"><strong>聞こえた音をローマ字で入力してください。</strong></span>
+          <span style="display:block; margin-top:8px; color:#d9e6ff; font-size:0.95em;">e.g., di, ti, fi, ri</span>
+          <span style="display:block; color:#d9e6ff; font-size:0.95em;">例：di, ti, fi, ri など</span>
+        </div>
+        <input id="inline_other_input" type="text" placeholder="Enter romaji / ローマ字を入力" style="width:100%; max-width:100%;" aria-label="Other response in romaji" />
+        <button type="button" id="inline_other_submit" class="jspsych-btn" style="margin-top:10px; width:100%;">Submit other answer / この回答で送信</button>
+        <div id="inline_other_error" style="display:none; margin-top:8px; color:#ff8b8b; text-align:left;">Please enter a response before submitting. / 入力してから送信してください。</div>
+      `;
+
+      buttonGroup.insertAdjacentElement('afterend', otherInlineContainer);
+
+      const inlineOtherInput = document.getElementById('inline_other_input');
+      const inlineOtherSubmit = document.getElementById('inline_other_submit');
+      const inlineOtherError = document.getElementById('inline_other_error');
+
+      let inlineOtherChoiceIndex = -1;
+      let inlineOtherSubmitted = false;
 
       Array.from(buttonGroup.children).forEach((choiceWrapper) => {
         const button = choiceWrapper.querySelector('button.jspsych-btn');
@@ -2480,8 +2715,59 @@
 
         if ((button.textContent || '').includes('他')) {
           choiceWrapper.style.gridColumn = '1 / -1';
+          choiceWrapper.style.marginTop = '10px';
+          inlineOtherChoiceIndex = Array.from(buttonGroup.children).indexOf(choiceWrapper);
+
+          button.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            event.stopPropagation();
+
+            if (otherInlineContainer.style.display === 'none') {
+              otherInlineContainer.style.display = 'block';
+            }
+
+            if (inlineOtherError) {
+              inlineOtherError.style.display = 'none';
+            }
+
+            if (inlineOtherInput) {
+              inlineOtherInput.focus();
+            }
+          }, true);
         }
       });
+
+      if (inlineOtherSubmit) {
+        inlineOtherSubmit.addEventListener('click', function() {
+          if (inlineOtherSubmitted) {
+            return;
+          }
+
+          const value = inlineOtherInput ? inlineOtherInput.value.trim() : '';
+          if (!value) {
+            if (inlineOtherError) {
+              inlineOtherError.style.display = 'block';
+            }
+            if (inlineOtherInput) {
+              inlineOtherInput.focus();
+            }
+            return;
+          }
+
+          if (inlineOtherError) {
+            inlineOtherError.style.display = 'none';
+          }
+
+          inlineOtherSubmitted = true;
+          const manualRt = Math.round(performance.now() - trialStartTime);
+          jsPsych.finishTrial({
+            response: inlineOtherChoiceIndex,
+            other_sound: value,
+            rt: manualRt
+          });
+        });
+      }
     },
     data: {
       stimulus: jsPsych.timelineVariable('stimulus'),
@@ -2515,6 +2801,9 @@
       }
       
       data.chosen_choice = selectedChoice;
+      if (selectedChoice && selectedChoice.includes('他')) {
+        data.other_sound = String(data.other_sound || '').trim();
+      }
       data.correct = selectedChoice === data.correct_response;
     }
   };
@@ -2553,7 +2842,7 @@
     timeline: [otherTextTrial],
     conditional_function: function() {
       const last = jsPsych.data.get().last(1).values()[0];
-      return last.chosen_choice && last.chosen_choice.includes('他');
+      return last.chosen_choice && last.chosen_choice.includes('他') && !String(last.other_sound || '').trim();
     }
   };
 
