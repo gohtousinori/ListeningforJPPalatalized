@@ -82,7 +82,7 @@
     }
 
     #jspsych-content {
-      margin-top: 0;
+      margin: 0 auto;
       border: 1px solid var(--panel-border);
       background: var(--panel);
       box-shadow: var(--shadow);
@@ -90,12 +90,15 @@
       border-radius: 14px;
       padding: var(--ui-content-pad-y) var(--ui-content-pad-x);
       max-width: 960px;
+      width: min(960px, 100%);
       font-size: var(--ui-font-base);
       line-height: 1.5;
     }
 
     .jspsych-content-wrapper {
       padding: calc(var(--brand-header-space) + 14px) 12px calc(var(--brand-footer-space) + 24px);
+      display: flex;
+      justify-content: center;
     }
 
     h1, h2, h3 {
@@ -380,6 +383,7 @@
       #jspsych-content {
         border-radius: 12px;
         padding: 20px 14px;
+        width: min(100%, calc(100vw - 16px));
       }
 
       #jspsych-content,
@@ -443,7 +447,7 @@
       }
 
       .jspsych-content-wrapper {
-        padding: calc(var(--brand-header-space) + 12px) 8px calc(var(--brand-footer-space) + 18px + env(safe-area-inset-bottom));
+        padding: calc(var(--brand-header-space) + 12px) 8px calc(var(--brand-footer-space) + 34px + env(safe-area-inset-bottom));
       }
 
       #ouBrandHeader {
@@ -471,17 +475,17 @@
         transform: translateX(-50%);
         bottom: 10px;
         width: calc(100vw - 16px);
-        font-size: 0.62rem;
-        padding: 7px 8px;
+        font-size: 0.58rem;
+        padding: 6px 7px;
       }
 
       #ouFooter .footer-layout {
-        gap: 8px;
+        gap: 6px;
       }
 
       #ouFooter .footer-logo {
-        width: 34px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
       }
     }
 
@@ -534,7 +538,7 @@
     footer.innerHTML = `
       <div class="footer-layout">
         <div class="footer-text">
-          <p class="footer-line"><strong>日本語学習者におけるイ段音（単音／拗音）の口蓋化子音の聴取困難</strong> / Perceptual difficulty of palatalized consonants in i-row sounds | <strong>Contact:</strong> (+81)070-9192-6459 | u548378a@ecs.osaka-u.ac.jp | ケハナン アカラポン (Akarapong Kehanan) | 大阪大学大学院 人文学研究科 博士後期課程</p>
+          <p class="footer-line"><strong>日本語学習者におけるイ段音（単音／拗音）の口蓋化子音の聴取困難</strong> / Perceptual difficulty of palatalized consonants in i-row sounds | <strong>Email:</strong> u548378a@ecs.osaka-u.ac.jp</p>
         </div>
         <img class="footer-logo" src="ou_logo.png" alt="Osaka University logo" />
       </div>
