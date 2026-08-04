@@ -888,6 +888,15 @@
   // ========================================
   const jsPsych = initJsPsych({
     on_trial_start: function() {
+      const contentCard = document.getElementById('jspsych-content');
+      if (contentCard) {
+        // Reset per-trial layout overrides (used by specific screens like consent)
+        // so they do not leak into subsequent pages.
+        contentCard.style.display = '';
+        contentCard.style.flexDirection = '';
+        contentCard.style.maxHeight = '';
+      }
+
       ensurePersistentBranding();
       syncBrandingLayoutSpacing();
     },
