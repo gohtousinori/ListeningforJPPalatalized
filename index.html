@@ -1239,16 +1239,35 @@
         return;
       }
 
+      const contentCard = document.getElementById('jspsych-content');
+      const stimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
       const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
-      if (!buttonGroup) {
+      if (!contentCard || !stimulusEl || !buttonGroup) {
         return;
       }
+
+      contentCard.style.display = 'flex';
+      contentCard.style.flexDirection = 'column';
+      contentCard.style.maxHeight = 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
+
+      stimulusEl.style.maxHeight = 'min(62vh, 620px)';
+      stimulusEl.style.overflowY = 'auto';
+      stimulusEl.style.paddingRight = '6px';
 
       buttonGroup.style.display = 'grid';
       buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
       buttonGroup.style.gap = '12px';
       buttonGroup.style.maxWidth = '720px';
-      buttonGroup.style.margin = '14px auto 0';
+      buttonGroup.style.width = '100%';
+      buttonGroup.style.margin = '12px auto 0';
+      buttonGroup.style.position = 'sticky';
+      buttonGroup.style.bottom = '0';
+      buttonGroup.style.zIndex = '3';
+      buttonGroup.style.padding = '12px 10px';
+      buttonGroup.style.background = 'rgba(7, 18, 35, 0.96)';
+      buttonGroup.style.border = '1px solid rgba(151, 183, 223, 0.28)';
+      buttonGroup.style.borderRadius = '10px';
+      buttonGroup.style.boxShadow = '0 8px 20px rgba(2, 8, 18, 0.42)';
 
       Array.from(buttonGroup.children).forEach((choiceWrapper) => {
         choiceWrapper.style.margin = '0';
