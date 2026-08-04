@@ -2589,14 +2589,12 @@
       buttonGroup.style.maxWidth = '560px';
       buttonGroup.style.width = '100%';
       buttonGroup.style.margin = '12px auto 0';
-      buttonGroup.style.position = 'sticky';
-      buttonGroup.style.bottom = '0';
-      buttonGroup.style.zIndex = '3';
-      buttonGroup.style.padding = '10px';
-      buttonGroup.style.background = 'rgba(7, 18, 35, 0.96)';
-      buttonGroup.style.border = '1px solid rgba(151, 183, 223, 0.28)';
-      buttonGroup.style.borderRadius = '10px';
-      buttonGroup.style.boxShadow = '0 8px 20px rgba(2, 8, 18, 0.42)';
+      buttonGroup.style.position = 'static';
+      buttonGroup.style.padding = '0';
+      buttonGroup.style.background = 'transparent';
+      buttonGroup.style.border = '0';
+      buttonGroup.style.borderRadius = '0';
+      buttonGroup.style.boxShadow = 'none';
 
       Array.from(buttonGroup.children).forEach((choiceWrapper) => {
         choiceWrapper.style.margin = '0';
