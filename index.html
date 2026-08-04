@@ -2564,7 +2564,49 @@
       </div>
     `,
     choices: ['開始 / Begin'],
-    button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+    button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>',
+    on_load: function() {
+      const isDesktopLandscape = window.matchMedia && window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches;
+      if (!isDesktopLandscape) {
+        return;
+      }
+
+      const contentCard = document.getElementById('jspsych-content');
+      const stimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
+      const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
+      if (!contentCard || !stimulusEl || !buttonGroup) {
+        return;
+      }
+
+      contentCard.style.display = 'flex';
+      contentCard.style.flexDirection = 'column';
+      contentCard.style.maxHeight = 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
+
+      stimulusEl.style.maxHeight = 'min(64vh, 620px)';
+      stimulusEl.style.overflowY = 'auto';
+      stimulusEl.style.paddingRight = '6px';
+
+      buttonGroup.style.maxWidth = '560px';
+      buttonGroup.style.width = '100%';
+      buttonGroup.style.margin = '12px auto 0';
+      buttonGroup.style.position = 'sticky';
+      buttonGroup.style.bottom = '0';
+      buttonGroup.style.zIndex = '3';
+      buttonGroup.style.padding = '10px';
+      buttonGroup.style.background = 'rgba(7, 18, 35, 0.96)';
+      buttonGroup.style.border = '1px solid rgba(151, 183, 223, 0.28)';
+      buttonGroup.style.borderRadius = '10px';
+      buttonGroup.style.boxShadow = '0 8px 20px rgba(2, 8, 18, 0.42)';
+
+      Array.from(buttonGroup.children).forEach((choiceWrapper) => {
+        choiceWrapper.style.margin = '0';
+        const button = choiceWrapper.querySelector('button.jspsych-btn');
+        if (button) {
+          button.style.width = '100%';
+          button.style.margin = '0';
+        }
+      });
+    }
   };
   timeline.push(titleAndNotice);
   
