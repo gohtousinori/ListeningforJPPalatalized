@@ -81,6 +81,12 @@
       font-family: 'IBM Plex Sans', 'Noto Sans JP', sans-serif;
     }
 
+    .jspsych-display-element {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
     #jspsych-content {
       margin: 0 auto;
       border: 1px solid var(--panel-border);
@@ -461,31 +467,11 @@
       }
 
       #ouTopCredit {
-        top: 10px;
-        right: 10px;
-        font-size: 0.6rem;
-        max-width: calc(100vw - 20px);
-        white-space: normal;
-        line-height: 1.25;
-        text-align: right;
+        display: none;
       }
 
       #ouFooter {
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: 10px;
-        width: calc(100vw - 16px);
-        font-size: 0.58rem;
-        padding: 6px 7px;
-      }
-
-      #ouFooter .footer-layout {
-        gap: 6px;
-      }
-
-      #ouFooter .footer-logo {
-        width: 28px;
-        height: 28px;
+        display: none;
       }
     }
 
@@ -557,11 +543,14 @@
     const root = document.documentElement;
     const header = document.getElementById('ouBrandHeader');
     const footer = document.getElementById('ouFooter');
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
 
     const headerHeight = header
       ? Math.ceil(header.getBoundingClientRect().height) + 18
       : 88;
-    const footerHeight = footer
+    const footerHeight = isMobile
+      ? 12
+      : footer
       ? Math.ceil(footer.getBoundingClientRect().height) + 18
       : 92;
 
@@ -1265,11 +1254,11 @@
       contentCard.style.display = 'flex';
       contentCard.style.flexDirection = 'column';
       contentCard.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
-        ? 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 12px - env(safe-area-inset-bottom))'
+        ? 'calc(100vh - var(--brand-header-space) - 18px - env(safe-area-inset-bottom))'
         : 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
 
       stimulusEl.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
-        ? 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 128px - env(safe-area-inset-bottom))'
+        ? 'calc(100vh - var(--brand-header-space) - 120px - env(safe-area-inset-bottom))'
         : 'min(62vh, 620px)';
       stimulusEl.style.overflowY = 'auto';
       stimulusEl.style.paddingRight = '6px';
