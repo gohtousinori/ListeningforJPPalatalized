@@ -573,7 +573,6 @@
     mountTopCredit();
     mountBrandHeader();
     mountFooter();
-    syncBrandingFlowOrder();
     syncBrandingLayoutSpacing();
   }
 
@@ -634,7 +633,14 @@
     brandingObserverStarted = true;
 
     const observer = new MutationObserver(function() {
-      if (!document.getElementById('ouTopCredit') || !document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+      const missingDesktopBranding = !isMobile && (
+        !document.getElementById('ouTopCredit') ||
+        !document.getElementById('ouBrandHeader') ||
+        !document.getElementById('ouFooter')
+      );
+
+      if (missingDesktopBranding) {
         ensurePersistentBranding();
       }
       syncBrandingLayoutSpacing();
