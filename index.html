@@ -372,6 +372,12 @@
         -webkit-text-size-adjust: 100%;
       }
 
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
       :root {
         --ui-font-base: clamp(15px, 1.05vw + 11px, 18px);
         --ui-font-small: clamp(13px, 0.75vw + 10.5px, 15px);
@@ -445,12 +451,17 @@
       }
 
       .jspsych-content-wrapper {
-        padding: calc(var(--brand-header-space) + 12px) 8px calc(var(--brand-footer-space) + 34px + env(safe-area-inset-bottom));
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
       }
 
       #ouBrandHeader {
-        top: 4px;
+        order: 1;
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
         width: calc(100vw - 10px);
+        margin: 4px auto 8px;
         padding: 6px 8px;
         gap: 8px;
         border-radius: 9px;
@@ -473,11 +484,20 @@
         display: none;
       }
 
+      .jspsych-display-element,
+      .jspsych-content-wrapper {
+        order: 2;
+      }
+
       #ouFooter {
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: max(4px, env(safe-area-inset-bottom));
+        order: 3;
+        position: relative;
+        left: auto;
+        transform: none;
+        right: auto;
+        bottom: auto;
         width: calc(100vw - 10px);
+        margin: 8px auto calc(4px + env(safe-area-inset-bottom));
         padding: 5px 8px;
         font-size: 0.54rem;
         border-radius: 9px;
