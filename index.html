@@ -525,6 +525,7 @@
 <body></body>
 <script>
   function mountBrandHeader() {
+    if (window.matchMedia && window.matchMedia('(max-width: 760px)').matches) return;
     if (document.getElementById('ouBrandHeader')) return;
 
     const header = document.createElement('div');
@@ -540,6 +541,7 @@
   }
 
   function mountTopCredit() {
+    if (window.matchMedia && window.matchMedia('(max-width: 760px)').matches) return;
     if (document.getElementById('ouTopCredit')) return;
 
     const credit = document.createElement('div');
@@ -551,6 +553,7 @@
   mountBrandHeader();
 
   function mountFooter() {
+    if (window.matchMedia && window.matchMedia('(max-width: 760px)').matches) return;
     if (document.getElementById('ouFooter')) return;
 
     const footer = document.createElement('div');
@@ -574,34 +577,15 @@
     syncBrandingLayoutSpacing();
   }
 
-  function syncBrandingFlowOrder() {
-    if (!(window.matchMedia && window.matchMedia('(max-width: 760px)').matches)) {
-      return;
-    }
-
-    const header = document.getElementById('ouBrandHeader');
-    const footer = document.getElementById('ouFooter');
-    const displayElement = document.querySelector('.jspsych-display-element');
-    if (!header || !footer || !displayElement || !document.body) {
-      return;
-    }
-
-    if (header.nextSibling !== displayElement) {
-      document.body.insertBefore(header, displayElement);
-    }
-
-    if (displayElement.nextSibling !== footer) {
-      document.body.insertBefore(footer, displayElement.nextSibling);
-    }
-  }
-
   function syncBrandingLayoutSpacing() {
     const root = document.documentElement;
     const header = document.getElementById('ouBrandHeader');
     const footer = document.getElementById('ouFooter');
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
 
-    const headerHeight = header
+    const headerHeight = isMobile
+      ? 12
+      : header
       ? Math.ceil(header.getBoundingClientRect().height) + 18
       : 88;
     const footerHeight = isMobile
@@ -653,7 +637,6 @@
       if (!document.getElementById('ouTopCredit') || !document.getElementById('ouBrandHeader') || !document.getElementById('ouFooter')) {
         ensurePersistentBranding();
       }
-      syncBrandingFlowOrder();
       syncBrandingLayoutSpacing();
     });
 
