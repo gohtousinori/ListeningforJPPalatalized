@@ -2445,6 +2445,44 @@
     stimulus: '<p style="font-size:16px;">Please select the option that most closely matches the sound you heard.<br><span style="color:#aaa; font-size:14px;">聞こえた音に最も近い選択肢を選択してください</span></p>',
     choices: jsPsych.timelineVariable('choices'),
     button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
+    on_load: function() {
+      if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) {
+        return;
+      }
+
+      const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
+      if (!buttonGroup) {
+        return;
+      }
+
+      buttonGroup.style.display = 'grid';
+      buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+      buttonGroup.style.gap = '10px';
+      buttonGroup.style.maxWidth = '100%';
+      buttonGroup.style.margin = '12px auto 0';
+
+      Array.from(buttonGroup.children).forEach((choiceWrapper) => {
+        const button = choiceWrapper.querySelector('button.jspsych-btn');
+        if (!button) {
+          return;
+        }
+
+        choiceWrapper.style.margin = '0';
+        choiceWrapper.style.width = '100%';
+
+        button.style.width = '100%';
+        button.style.minWidth = '0';
+        button.style.minHeight = '52px';
+        button.style.margin = '0';
+        button.style.padding = '10px 8px';
+        button.style.whiteSpace = 'normal';
+        button.style.lineHeight = '1.3';
+
+        if ((button.textContent || '').includes('他')) {
+          choiceWrapper.style.gridColumn = '1 / -1';
+        }
+      });
+    },
     data: {
       stimulus: jsPsych.timelineVariable('stimulus'),
       correct_response: jsPsych.timelineVariable('correct_response'),
