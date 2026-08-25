@@ -1508,6 +1508,7 @@
         <div style="color:#fff">
           <label><strong>学習期間（累積）はどのくらいですか？</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your total duration of Japanese language study (years/months).</div>
+          <div style="margin-top:4px;color:#ccc;font-size:0.9em">※日本人の方は、この項目を現在の年齢として入力してください。</div>
           <div style="margin:8px 0">
             <select id="study_year">${yearOptions}</select>
             <select id="study_month">${monthOptions}</select>
@@ -1515,6 +1516,7 @@
 
           <label><strong>滞在期間（合計）はどのくらいですか？</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your cumulative length of residence in Japan (years/months).</div>
+          <div style="margin-top:4px;color:#ccc;font-size:0.9em">※日本人の方は、この項目も現在の年齢として入力してください。</div>
           <div style="margin:8px 0">
             <select id="stay_year">${yearOptions}</select>
             <select id="stay_month">${monthOptions}</select>
@@ -1547,12 +1549,13 @@
 
           <label><strong>音韻論・音声学の学術的・理論的な学習経験はありますか。</strong></label>
           <div style="margin-top:6px;color:#ccc;font-size:0.9em">Do you have academic and/or theoretical training in phonology and/or phonetics?</div>
+          <div style="margin-top:4px;color:#ccc;font-size:0.9em">For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).<br>この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。</div>
           <div style="margin:8px 0">
             <select id="phonology_theory_experience">${phonologyTheoryOptions}</select>
           </div>
 
           <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (the @ and . are entered in separate fields below).<br>
           必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
           This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
           <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
@@ -2186,12 +2189,14 @@
               <h2 style="text-align:center; margin-top:0;">Pre-survey / 事前質問</h2>
               <label><strong>学習期間（累積）はどのくらいですか？</strong></label>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your total duration of Japanese language study (years/months).</div>
+              <div style="margin-top:4px;color:#ccc;font-size:0.9em">※日本人の方は、この項目を現在の年齢として入力してください。</div>
               <div style="margin:8px 0">
                 <select id="wizard_study_year">${buildYearOptions()}</select>
                 <select id="wizard_study_month">${buildMonthOptions()}</select>
               </div>
               <label><strong>滞在期間（合計）はどのくらいですか？</strong></label>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please indicate your cumulative length of residence in Japan (years/months).</div>
+              <div style="margin-top:4px;color:#ccc;font-size:0.9em">※日本人の方は、この項目も現在の年齢として入力してください。</div>
               <div style="margin:8px 0">
                 <select id="wizard_stay_year">${buildYearOptions()}</select>
                 <select id="wizard_stay_month">${buildMonthOptions()}</select>
@@ -2368,6 +2373,7 @@
               <h2 style="text-align:center; margin-top:0;">Background / 背景情報</h2>
               <label><strong>音韻論・音声学の学術的・理論的な学習経験はありますか。</strong></label>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">Do you have academic and/or theoretical training in phonology and/or phonetics?</div>
+              <div style="margin-top:4px;color:#ccc;font-size:0.9em">For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).<br>この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。</div>
               <div style="margin:8px 0">
                 <select id="wizard_phonology_select">
                   <option value="">Select / 選択してください</option>
@@ -2376,7 +2382,7 @@
                 </select>
               </div>
               <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
-              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (@ and . are separated into fields below).<br>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (the @ and . are entered in separate fields below).<br>
               必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
               This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
               <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
@@ -2388,6 +2394,7 @@
               </div>
               <label><strong>発音学習の経験はありますか。</strong></label>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">Have you received formal instruction in pronunciation? (Yes/No)</div>
+              <div style="margin-top:4px;color:#ccc;font-size:0.9em">For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).<br>この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。</div>
               <div style="margin:8px 0">
                 <select id="wizard_pron_select">
                   <option value="">Select / 選択してください</option>
@@ -2397,7 +2404,7 @@
               </div>
               <div id="wizard_institution_wrap" style="display:none; margin-top: 14px;">
                 <label><strong>Have you received systematic Japanese pronunciation instruction at any institution? If yes, please provide the institution name.<br>日本語の体系的な発音学習（授業／科目等）を受講したことはありますか。受講機関があればご記入ください（任意）</strong></label>
-                <div style="margin-top:6px;color:#ccc;font-size:0.9em">If you answered Yes above, please enter the institution name.</div>
+                <div style="margin-top:6px;color:#ccc;font-size:0.9em">If you answered Yes above, please enter the institution name. Only accredited institutions or officially recognized programs are accepted.<br>上で「有」を選択した場合は、受講機関名をご記入ください。認定機関または制度上認められたプログラムのみ対象です。</div>
                 <input id="wizard_institution_input" type="text" placeholder="受講した場合は機関名を入力" style="width:100%; max-width:680px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em; margin-top:8px;" />
               </div>
               <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
@@ -2496,7 +2503,7 @@
               <div><strong>日本語の順番 / Japanese language order:</strong> ${languageMetrics.japaneseLanguageOrder || '(not found)'}</div>
               <div><strong>学習言語数 / Total learned languages:</strong> ${languageMetrics.totalLanguagesLearned || '(not found)'}</div>
               <h3>3. その他 / Other Information</h3>
-              <div><strong>音韻論・音声学の学習経験 / Phonology-phonetics training:</strong> ${state.phonologyTheoryExperience}</div>
+              <div><strong>音韻論・音声学の学習経験 / Phonology/phonetics training:</strong> ${state.phonologyTheoryExperience}</div>
               <div><strong>発音学習の経験 / Pronunciation training experience:</strong> ${state.pronExperience}</div>
               <div><strong>受講機関 / Institution:</strong> ${institution || '(none)'}</div>
               <div><strong>Email:</strong> ${email || '(none)'}</div>
@@ -2504,7 +2511,7 @@
             <div style="margin-top:18px; color:#ccc; font-size:0.95em; line-height:1.7;">
               内容に問題がなければ次へ進んでください。ここでは戻れますが、次の画面からは戻れません。
               <br>
-              If everything looks correct, proceed to the listening test. You may go back from this screen only.
+              If everything looks correct, proceed to the listening test. You can return only from this screen.
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:22px;">
               <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">Back / 戻る</button>
@@ -2599,10 +2606,10 @@
         <p>Prior to the main session, you will complete <strong>2 practice items</strong>. Practice responses are not included in scoring.</p>
         <p>The order of response options is randomized for each item.</p>
         <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
-          <strong>📌 Important:</strong> You may select the same option in multiple items when you perceive the same sound.<br>
+          <strong>Important:</strong> You may select the same option in multiple items when you perceive the same sound.<br>
           <span style="color: #ccc; font-size: 0.92em;">For example, if you select "sha" in Item 1 and Item 2 also sounds like "sha", selecting "sha" again is appropriate.</span>
         </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ Please respond naturally and as promptly as possible</strong> without over-deliberation (there is no time limit).</p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>Please respond naturally and as promptly as possible</strong> without over-deliberation (there is no time limit).</p>
         
         <h3 style="color: #aaa; margin-top: 25px;">【日本語】</h3>
         <p>本調査は日本語音声の聴覚識別テストです。全部で <strong>44 問</strong>あります。</p>
@@ -2610,10 +2617,10 @@
         <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点対象ではありませんが、本番と同様にご回答ください。</p>
         <p>各項目における選択肢の順序は、毎回ランダムに入れ替わります。</p>
         <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
-          <strong>📌 重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
+          <strong>重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
           <span style="color: #ccc; font-size: 0.92em;">例えば、問1で「sha」と答えた場合でも、問2でも「sha」に聞こえた場合は、同じく「sha」を選んでいただいても構いません。</span>
         </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>⏱️ できるだけ自然な速度で、直感的にご回答ください</strong>（時間制限はありません）</p>
+        <p style="color: #ffcc00; margin-top: 15px;"><strong>できるだけ自然な速度で、直感的にご回答ください</strong>（時間制限はありません）</p>
       </div>
     `,
     choices: ['開始 / Begin'],
@@ -2804,7 +2811,7 @@
           <span style="display:block; color:#d9e6ff; font-size:0.95em;">例：di, ti, fi, ri など</span>
         </div>
         <input id="inline_other_input" type="text" placeholder="Enter romaji / ローマ字を入力" style="width:100%; max-width:100%;" aria-label="Other response in romaji" />
-        <button type="button" id="inline_other_submit" class="jspsych-btn" style="margin-top:10px; width:100%;">Submit other answer / この回答で送信</button>
+        <button type="button" id="inline_other_submit" class="jspsych-btn" style="margin-top:10px; width:100%;">Submit response / この内容で送信</button>
         <div id="inline_other_error" style="display:none; margin-top:8px; color:#ff8b8b; text-align:left;">Please enter a response before submitting. / 入力してから送信してください。</div>
       `;
 
