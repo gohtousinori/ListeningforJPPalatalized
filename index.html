@@ -324,6 +324,51 @@
       display: none;
     }
 
+    #ouLoadingOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 9, 18, 0.72);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #ouLoadingOverlay .ou-loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: rgba(10, 22, 40, 0.92);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    #ouLoadingOverlay .ou-spinner {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 4px solid rgba(183, 204, 237, 0.25);
+      border-top-color: var(--accent-strong);
+      animation: ouSpin 0.9s linear infinite;
+    }
+
+    @keyframes ouSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    #ouLoadingOverlay .ou-loading-text {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+
     #ouFooter {
       position: fixed;
       left: 50%;
@@ -804,6 +849,30 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  function showLoadingOverlay(message) {
+    let overlay = document.getElementById('ouLoadingOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ouLoadingOverlay';
+      overlay.innerHTML = `
+        <div class="ou-loading-box">
+          <div class="ou-spinner"></div>
+          <div class="ou-loading-text" id="ouLoadingText"></div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    const textEl = document.getElementById('ouLoadingText');
+    if (textEl) textEl.innerHTML = message;
+    overlay.style.display = 'flex';
+  }
+
+  function hideLoadingOverlay() {
+    const overlay = document.getElementById('ouLoadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
   async function postSubmission(payload) {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
@@ -1239,6 +1308,13 @@
 
       queueSubmission(payload);
 
+      showLoadingOverlay(
+        'Submitting your responses, please wait...<br>' +
+        '<span style="opacity:0.85; font-size:0.85em;">This may take up to a minute depending on your connection. Please do not close this page.</span><br><br>' +
+        '回答を送信しています。しばらくお待ちください…<br>' +
+        '<span style="opacity:0.85; font-size:0.85em;">通信状況によっては最大1分程度かかる場合があります。このページを閉じないでください。</span>'
+      );
+
       submitWithRetry(payload, 3, 2000)
       .then(({ response, result, responseText }) => {
         console.log('Google Sheets response:', {
@@ -1249,6 +1325,7 @@
 
         removeQueuedSubmission(submissionId);
         downloadCsv();
+        hideLoadingOverlay();
 
         if (result.success && !result.fallback) {
           alert('✓ Your responses have been submitted to Google Sheets successfully.\n\nHTTP Status: ' + response.status + '\n\nResultPattern.csv has also been downloaded to your Downloads folder.');
@@ -1261,6 +1338,7 @@
       .catch(error => {
         console.error('Error sending to Google Sheets:', error);
         downloadCsv();
+        hideLoadingOverlay();
         alert('⚠️ Submission to Google Sheets failed.\n\nDetails: ' + error.message + '\n\nYour data has been stored locally on this device and will be retried automatically the next time this page is opened.\n\nCSV download completed.');
       });
     }
@@ -2869,6 +2947,26 @@
       `;
 
       buttonGroup.insertAdjacentElement('afterend', otherInlineContainer);
+
+      const audioTroubleshootNote = document.createElement('div');
+      audioTroubleshootNote.id = 'audio-troubleshoot-note';
+      audioTroubleshootNote.style.marginTop = '18px';
+      audioTroubleshootNote.style.paddingTop = '12px';
+      audioTroubleshootNote.style.borderTop = '1px solid rgba(181, 206, 240, 0.2)';
+      audioTroubleshootNote.style.maxWidth = '760px';
+      audioTroubleshootNote.style.marginLeft = 'auto';
+      audioTroubleshootNote.style.marginRight = 'auto';
+      audioTroubleshootNote.style.textAlign = 'center';
+      audioTroubleshootNote.style.color = 'var(--muted-ink)';
+      audioTroubleshootNote.style.fontSize = '0.72em';
+      audioTroubleshootNote.style.lineHeight = '1.6';
+      audioTroubleshootNote.style.opacity = '0.85';
+      audioTroubleshootNote.innerHTML = `
+        If you cannot hear the sound, please check your device settings, or switch your browser to Chrome/Firefox. If you are on a mobile phone and the audio still does not play, please take the test on a computer.<br>
+        音声が聞こえない場合は、お使いの機器をご確認いただくか、ブラウザをChromeまたはFirefoxに変更してください。スマートフォンでも音声が再生されない場合は、パソコンでテストを行ってください。
+      `;
+
+      otherInlineContainer.insertAdjacentElement('afterend', audioTroubleshootNote);
 
       const inlineOtherInput = document.getElementById('inline_other_input');
       const inlineOtherSubmit = document.getElementById('inline_other_submit');
