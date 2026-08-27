@@ -87,8 +87,8 @@
       flex: 0 0 auto;
       position: sticky;
       bottom: 0;
-      background: rgba(9, 20, 37, 0.94);
-      border-top: 1px solid rgba(151, 183, 223, 0.28);
+      background: transparent;
+      border-top: none;
       padding-top: 12px;
       margin-top: 10px;
     }
@@ -1659,15 +1659,11 @@
           </div>
 
           <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
-          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (the @ and . are entered in separate fields below).<br>
+          <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address.<br>
           必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
           This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
-          <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
-            <input id="email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
-            <span>@</span>
-            <input id="email_domain" type="text" placeholder="example" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
-            <span>.</span>
-            <input id="email_tld" type="text" placeholder="com" style="width:80px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+          <div style="margin:12px auto; max-width:500px;">
+            <input id="email_address" type="email" placeholder="you@example.com" autocomplete="email" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
           </div>
           
           <button id="preSurveyFormBtn" style="margin-top:20px; padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Proceed / 続行</button>
@@ -1813,10 +1809,7 @@
           return;
         }
         
-        const user = document.getElementById('email_user')?.value || '';
-        const domain = document.getElementById('email_domain')?.value || '';
-        const tld = document.getElementById('email_tld')?.value || '';
-        const email = (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
+        const email = document.getElementById('email_address')?.value.trim() || '';
         jsPsych.data.write({
           task: 'pre_survey_form',
           study_year,
@@ -2255,17 +2248,12 @@
         learnedLanguages: [],
         phonologyTheoryExperience: '',
         pronExperience: '',
-        emailUser: '',
-        emailDomain: '',
-        emailTld: '',
+        emailAddress: '',
         institution: ''
       };
 
       const getEmail = () => {
-        const user = state.emailUser.trim();
-        const domain = state.emailDomain.trim();
-        const tld = state.emailTld.trim();
-        return (user || domain || tld) ? `${user}@${domain}.${tld}` : '';
+        return state.emailAddress.trim();
       };
 
       const showError = (targetId, message) => {
@@ -2506,15 +2494,11 @@
                 </select>
               </div>
               <label><strong>今後の連絡のため、メールアドレスをご記入ください。</strong></label>
-              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address (the @ and . are entered in separate fields below).<br>
+              <div style="margin-top:6px;color:#ccc;font-size:0.9em">Please enter your email address.<br>
               必須ではありません。このメールアドレスの個人情報は、研究が完了するまで（3年以内）安全なデータベースに保管され、緊急の連絡の場合のみに使用されます。<br>
               This field is optional. Personal information entered here will be stored securely (for up to three years) and used only if urgent contact becomes necessary.</div>
-              <div style="margin:12px auto; display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; max-width:500px;">
-                <input id="wizard_email_user" type="text" placeholder="email" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
-                <span>@</span>
-                <input id="wizard_email_domain" type="text" placeholder="example" style="width:120px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
-                <span>.</span>
-                <input id="wizard_email_tld" type="text" placeholder="com" style="width:80px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+              <div style="margin:12px auto; max-width:500px;">
+                <input id="wizard_email_address" type="email" placeholder="you@example.com" autocomplete="email" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
               </div>
               <label><strong>発音学習の経験はありますか。</strong></label>
               <div style="margin-top:6px;color:#ccc;font-size:0.9em">Have you received formal instruction in pronunciation? (Yes/No)</div>
@@ -2543,9 +2527,7 @@
           `;
 
           document.getElementById('wizard_phonology_select').value = state.phonologyTheoryExperience;
-          document.getElementById('wizard_email_user').value = state.emailUser;
-          document.getElementById('wizard_email_domain').value = state.emailDomain;
-          document.getElementById('wizard_email_tld').value = state.emailTld;
+          document.getElementById('wizard_email_address').value = state.emailAddress;
           document.getElementById('wizard_pron_select').value = state.pronExperience;
           document.getElementById('wizard_institution_input').value = state.institution;
 
@@ -2570,14 +2552,8 @@
           institutionInput.addEventListener('input', () => {
             state.institution = institutionInput?.value || '';
           });
-          document.getElementById('wizard_email_user').addEventListener('input', () => {
-            state.emailUser = document.getElementById('wizard_email_user')?.value || '';
-          });
-          document.getElementById('wizard_email_domain').addEventListener('input', () => {
-            state.emailDomain = document.getElementById('wizard_email_domain')?.value || '';
-          });
-          document.getElementById('wizard_email_tld').addEventListener('input', () => {
-            state.emailTld = document.getElementById('wizard_email_tld')?.value || '';
+          document.getElementById('wizard_email_address').addEventListener('input', () => {
+            state.emailAddress = document.getElementById('wizard_email_address')?.value || '';
           });
 
           toggleInstitution();
@@ -2589,9 +2565,7 @@
 
           document.getElementById('wizard_step3_next').addEventListener('click', function() {
             state.phonologyTheoryExperience = document.getElementById('wizard_phonology_select')?.value || '';
-            state.emailUser = document.getElementById('wizard_email_user')?.value || '';
-            state.emailDomain = document.getElementById('wizard_email_domain')?.value || '';
-            state.emailTld = document.getElementById('wizard_email_tld')?.value || '';
+            state.emailAddress = document.getElementById('wizard_email_address')?.value || '';
             state.pronExperience = document.getElementById('wizard_pron_select')?.value || '';
             state.institution = document.getElementById('wizard_institution_input')?.value || '';
 
