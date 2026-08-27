@@ -1238,6 +1238,28 @@
         URL.revokeObjectURL(url);
       };
 
+      const showCompletionPage = () => {
+        const content = document.getElementById('jspsych-content');
+        if (!content) return;
+
+        content.innerHTML = `
+          <div style="text-align:center; max-width:760px; margin:0 auto; color:#fff;">
+            <h2>ご協力ありがとうございました。</h2>
+            <p style="font-size:1.05em; line-height:1.8;">ご回答はサーバーに正常に保存されました。</p>
+            <p style="font-size:1.05em; line-height:1.8;">下のボタンをクリックすると、テスト結果ファイルをダウンロードできます。</p>
+            <p style="font-size:1.05em; line-height:1.8;">なお、誠に恐縮ですが、お一人につきご参加は1回までとさせていただきます。</p>
+            <hr style="margin:24px 0; border-color:rgba(255,255,255,0.2);" />
+            <h2>Thank you once again for your participation.</h2>
+            <p style="font-size:1.05em; line-height:1.8;">Your responses have been successfully recorded on the server.</p>
+            <p style="font-size:1.05em; line-height:1.8;">Please click the button below to download your test results.</p>
+            <p style="font-size:1.05em; line-height:1.8;">We respectfully request that each person participate no more than once.</p>
+            <button type="button" id="download_result_btn" class="jspsych-btn" style="margin-top:18px; min-width:240px;">Download Results / 結果をダウンロード</button>
+          </div>
+        `;
+
+        document.getElementById('download_result_btn').addEventListener('click', downloadCsv);
+      };
+
       // ===================== Show summary text =====================
       const tanOnCorrect = responseRows.filter(r => tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
       const yoOnCorrect = responseRows.filter(r => !tanOnList.includes(r.stimulus) && (r.correct === true || r.correct === 'true')).length;
@@ -1267,7 +1289,7 @@
     - Total correct: ${tanOnCorrect + yoOnCorrect}/44
 
     ════════════════════════════════════════════════════════
-      Sending to Google Sheets and downloading CSV...
+      Sending to Google Sheets...
     ════════════════════════════════════════════════════════
     `;
       
@@ -1324,22 +1346,20 @@
         });
 
         removeQueuedSubmission(submissionId);
-        downloadCsv();
         hideLoadingOverlay();
 
         if (result.success && !result.fallback) {
-          alert('✓ Your responses have been submitted to Google Sheets successfully.\n\nHTTP Status: ' + response.status + '\n\nResultPattern.csv has also been downloaded to your Downloads folder.');
+          showCompletionPage();
         } else if (result.success && result.fallback) {
-          alert('✓ Your responses were sent using fallback mode (' + result.fallback + ').\n\nThis browser may restrict direct access to the response body; however, the data has been transmitted from your device.\n\nPlease verify the entry in Google Sheets within 1-2 minutes.\n\nCSV download completed.');
+          showCompletionPage();
         } else {
-          alert('⚠️ An error occurred while submitting data to Google Sheets.\n\nHTTP Status: ' + response.status + '\nDetails: ' + (result.error || responseText || 'Unknown error') + '\n\nCSV download completed.');
+          alert('⚠️ An error occurred while submitting data to Google Sheets.\n\nHTTP Status: ' + response.status + '\nDetails: ' + (result.error || responseText || 'Unknown error'));
         }
       })
       .catch(error => {
         console.error('Error sending to Google Sheets:', error);
-        downloadCsv();
         hideLoadingOverlay();
-        alert('⚠️ Submission to Google Sheets failed.\n\nDetails: ' + error.message + '\n\nYour data has been stored locally on this device and will be retried automatically the next time this page is opened.\n\nCSV download completed.');
+        alert('⚠️ Submission to Google Sheets failed.\n\nDetails: ' + error.message + '\n\nYour data has been stored locally on this device and will be retried automatically the next time this page is opened.');
       });
     }
   });
@@ -1513,7 +1533,6 @@
       monthOptions += '<option value="3">Not sure (about 0-6 months) / 不確定(約0-6か月)</option>';
       monthOptions += '<option value="9">Not sure (about 6-12 months) / 不確定(約6-12か月)</option>';
       const nativeLanguageOptions = [
-        { label: '----- Asian Languages -----', disabled: true },
         'Thai (ภาษาไทย)',
         'Japanese (日本語)',
         'Korean (한국어)',
@@ -1532,11 +1551,9 @@
         'Lao (ພາສາລາວ)',
         'Burmese (မြန်မာဘာသာ)',
         'Turkish (Türkçe)',
-        { label: '----- Chinese Languages -----', disabled: true },
         'Chinese, Mandarin (中文/普通话)',
         'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
         'Chinese, Cantonese (中文/廣東話)',
-        { label: '----- Indian Languages -----', disabled: true },
         'Hindi (हिन्दी)',
         'Punjabi (ਪੰਜਾਬੀ)',
         'Bengali (বাংলা)',
@@ -1544,7 +1561,6 @@
         'Tamil (தமிழ்)',
         'Marathi (मराठी)',
         'Gujarati (ગુજરાતી)',
-        { label: '----- European and American Languages -----', disabled: true },
         'English (US)',
         'English (UK)',
         'French (Français)',
@@ -1567,7 +1583,6 @@
         'Lithuanian (Lietuvių)',
         'Latvian (Latviešu)',
         'Estonian (Eesti)',
-        { label: '----- Slavic Languages -----', disabled: true },
         'Russian (Русский)',
         'Belarusian (Беларуская)',
         'Ukrainian (Українська)',
@@ -1580,32 +1595,27 @@
         'Croatian (Hrvatski)',
         'Bosnian (Bosanski)',
         'Serbian (Српски)',
-        { label: '----- Middle Eastern Languages -----', disabled: true },
         'Arabic (العربية)',
         'Persian, Farsi (فارسی)',
         'Urdu (اردو)',
         'Hebrew (עברית)',
         'Kurdish (Kurdî)',
         'Armenian (Հայերեն)',
-        { label: '----- African Languages -----', disabled: true },
         'Swahili (Kiswahili)',
         'Amharic (አማርኛ)',
         'Somali (Soomaali)',
         'Hausa (Hausa)',
         'Yoruba (Yorùbá)',
         'Zulu (isiZulu)',
-        { label: '----- Oceanian Languages -----', disabled: true },
         'Maori (Te Reo Māori)',
         
       ];
       let nativeLanguageSelect = '<option value="">Select / 選択してください</option>';
-      nativeLanguageOptions.forEach(item => {
+      nativeLanguageOptions.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })).forEach(item => {
         if (typeof item === 'string') {
           nativeLanguageSelect += `<option value="${item}">${item}</option>`;
           return;
         }
-
-        nativeLanguageSelect += `<option value="" disabled>${item.label}</option>`;
       });
 
       return `
@@ -1835,7 +1845,6 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
       const nativeLanguageOptions = [
-        { label: '----- Asian Languages -----', disabled: true },
         'Thai (ภาษาไทย)',
         'Japanese (日本語)',
         'Korean (한국어)',
@@ -1854,11 +1863,9 @@
         'Lao (ພາສາລາວ)',
         'Burmese (မြန်မာဘာသာ)',
         'Turkish (Türkçe)',
-        { label: '----- Chinese Languages -----', disabled: true },
         'Chinese, Mandarin (中文/普通话)',
         'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
         'Chinese, Cantonese (中文/廣東話)',
-        { label: '----- Indian Languages -----', disabled: true },
         'Hindi (हिन्दी)',
         'Punjabi (ਪੰਜਾਬੀ)',
         'Bengali (বাংলা)',
@@ -1866,7 +1873,6 @@
         'Tamil (தமிழ்)',
         'Marathi (मराठी)',
         'Gujarati (ગુજરાતी)',
-        { label: '----- European and American Languages -----', disabled: true },
         'English (US)',
         'English (UK)',
         'French (Français)',
@@ -1889,7 +1895,6 @@
         'Lithuanian (Lietuvių)',
         'Latvian (Latviešu)',
         'Estonian (Eesti)',
-        { label: '----- Slavic Languages -----', disabled: true },
         'Russian (Русский)',
         'Belarusian (Беларуская)',
         'Ukrainian (Українська)',
@@ -1902,31 +1907,27 @@
         'Croatian (Hrvatski)',
         'Bosnian (Bosanski)',
         'Serbian (Српски)',
-        { label: '----- Middle Eastern Languages -----', disabled: true },
         'Arabic (العربية)',
         'Persian, Farsi (فارسی)',
         'Urdu (اردو)',
         'Hebrew (עברית)',
         'Kurdish (Kurdî)',
         'Armenian (Հայերեն)',
-        { label: '----- African Languages -----', disabled: true },
         'Swahili (Kiswahili)',
         'Amharic (አማርኛ)',
         'Somali (Soomaali)',
         'Hausa (Hausa)',
         'Yoruba (Yorùbá)',
         'Zulu (isiZulu)',
-        { label: '----- Oceanian Languages -----', disabled: true },
         'Maori (Te Reo Māori)'
       ];
 
       let nativeLanguageSelect = '<option value="">Select / 選択してください</option>';
-      nativeLanguageOptions.forEach(item => {
+      nativeLanguageOptions.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })).forEach(item => {
         if (typeof item === 'string') {
           nativeLanguageSelect += `<option value="${item}">${item}</option>`;
           return;
         }
-        nativeLanguageSelect += `<option value="" disabled>${item.label}</option>`;
       });
 
       return `
@@ -2103,7 +2104,6 @@
       const displayElement = document.getElementById('jspsych-content');
 
       const languageOptions = [
-        { label: '----- Asian Languages -----', disabled: true },
         'Thai (ภาษาไทย)',
         'Japanese (日本語)',
         'Korean (한국어)',
@@ -2122,11 +2122,9 @@
         'Lao (ພາສາລາວ)',
         'Burmese (မြန်မာဘာသာ)',
         'Turkish (Türkçe)',
-        { label: '----- Chinese Languages -----', disabled: true },
         'Chinese, Mandarin (中文/普通话)',
         'Chinese, Taiwanese Mandarin (中文/臺灣華語)',
         'Chinese, Cantonese (中文/廣東話)',
-        { label: '----- Indian Languages -----', disabled: true },
         'Hindi (हिन्दी)',
         'Punjabi (ਪੰਜਾਬੀ)',
         'Bengali (বাংলা)',
@@ -2134,7 +2132,6 @@
         'Tamil (தமிழ்)',
         'Marathi (मराठी)',
         'Gujarati (ગુજરાતી)',
-        { label: '----- European and American Languages -----', disabled: true },
         'English (US)',
         'English (UK)',
         'French (Français)',
@@ -2157,7 +2154,6 @@
         'Lithuanian (Lietuvių)',
         'Latvian (Latviešu)',
         'Estonian (Eesti)',
-        { label: '----- Slavic Languages -----', disabled: true },
         'Russian (Русский)',
         'Belarusian (Беларуская)',
         'Ukrainian (Українська)',
@@ -2170,32 +2166,28 @@
         'Croatian (Hrvatski)',
         'Bosnian (Bosanski)',
         'Serbian (Српски)',
-        { label: '----- Middle Eastern Languages -----', disabled: true },
         'Arabic (العربية)',
         'Persian, Farsi (فارسی)',
         'Urdu (اردو)',
         'Hebrew (עברית)',
         'Kurdish (Kurdî)',
         'Armenian (Հայերեն)',
-        { label: '----- African Languages -----', disabled: true },
         'Swahili (Kiswahili)',
         'Amharic (አማርኛ)',
         'Somali (Soomaali)',
         'Hausa (Hausa)',
         'Yoruba (Yorùbá)',
         'Zulu (isiZulu)',
-        { label: '----- Oceanian Languages -----', disabled: true },
         'Maori (Te Reo Māori)'
       ];
 
       const buildSelectOptions = () => {
         let selectHtml = '<option value="">Select / 選択してください</option>';
-        languageOptions.forEach(item => {
+        languageOptions.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })).forEach(item => {
           if (typeof item === 'string') {
             selectHtml += `<option value="${item}">${item}</option>`;
             return;
           }
-          selectHtml += `<option value="" disabled>${item.label}</option>`;
         });
         return selectHtml;
       };
@@ -3155,13 +3147,13 @@
       <p style="margin-top: 20px; color: #999;">ご協力いただき、誠にありがとうございました。皆様の貴重なご回答は、本研究の遂行に大変有益です。皆様の今後ますますのご活躍とご健勝をお祈り申し上げます。</p>
       <div style="margin-top: 24px; padding: 16px 20px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 6px; font-size: 14px; line-height: 1.8; text-align: left;">
         <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 備考 / Note</strong></p>
-        <p style="margin: 0 0 6px 0;">When you press the button below, a <strong>response data file</strong> will be downloaded automatically.<br>
-        Submitting your data to the server may take up to <strong>2 minutes</strong>, depending on network conditions. Please wait until the completion message appears.<br>
+        <p style="margin: 0 0 6px 0;">Your responses will be submitted to the server when you press the button below. After the submission is completed, you will be able to download your <strong>response data file</strong> by clicking a button on the completion page.<br>
+        Submitting your data to the server may take up to <strong>2 minutes</strong>, depending on network conditions. Please wait until the completion page appears.<br>
         Please retain this file in case of server or network issues; the researcher may request it at a later date via email:<br>
         <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
         <hr style="border-color: rgba(255,255,255,0.15); margin: 10px 0;"/>
-        <p style="margin: 0; color: #ccc;">送信ボタンを押すと、<strong>回答データファイル（ResultPattern.csv）</strong>が自動的にダウンロードされます。<br>
-        ネットワーク状況により、サーバーへの送信には<strong>最大2分程度</strong>かかる場合があります。完了メッセージが表示されるまでお待ちください。<br>
+        <p style="margin: 0; color: #ccc;">送信ボタンを押すと、回答がサーバーに送信されます。送信完了後、完了画面のボタンをクリックして<strong>回答データファイル（ResultPattern.csv）</strong>をダウンロードできます。<br>
+        ネットワーク状況により、サーバーへの送信には<strong>最大2分程度</strong>かかる場合があります。完了画面が表示されるまでお待ちください。<br>
         サーバーやインターネット接続に問題が生じた場合に備え、このファイルを保管しておいてください。<br>
         後日、研究者よりファイルの提供をお願いする場合がございます。<br>
         連絡先: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
