@@ -2876,6 +2876,7 @@
             clearError('wizard_step1_error');
             state.step = 2;
             renderStep();
+            applyInstructionLanguage(displayElement);
           });
           return;
         }
@@ -2990,6 +2991,7 @@
           document.getElementById('wizard_step2_back').addEventListener('click', function() {
             state.step = 1;
             renderStep();
+            applyInstructionLanguage(displayElement);
           });
 
           document.getElementById('wizard_step2_next').addEventListener('click', function() {
@@ -3007,6 +3009,7 @@
             clearError('wizard_step2_error');
             state.step = 3;
             renderStep();
+            applyInstructionLanguage(displayElement);
           });
 
           renderLanguages();
@@ -3096,6 +3099,7 @@
           document.getElementById('wizard_step3_back').addEventListener('click', function() {
             state.step = 2;
             renderStep();
+            applyInstructionLanguage(displayElement);
           });
 
           document.getElementById('wizard_step3_next').addEventListener('click', function() {
@@ -3117,6 +3121,7 @@
             clearError('wizard_step3_error');
             state.step = 4;
             renderStep();
+            applyInstructionLanguage(displayElement);
           });
           return;
         }
@@ -3163,6 +3168,7 @@
         document.getElementById('wizard_confirm_back').addEventListener('click', function() {
           state.step = 3;
           renderStep();
+          applyInstructionLanguage(displayElement);
         });
 
         document.getElementById('wizard_confirm_next').addEventListener('click', function() {
@@ -3224,8 +3230,6 @@
         });
       };
 
-      const languageObserver = new MutationObserver(() => applyInstructionLanguage(displayElement));
-      languageObserver.observe(displayElement, { childList: true, subtree: true });
       renderStep();
       applyInstructionLanguage(displayElement);
     }
@@ -3505,6 +3509,7 @@
       buttonGroup.style.maxWidth = '760px';
       buttonGroup.style.width = '100%';
       buttonGroup.style.margin = '12px auto 0';
+      const localizedOther = languageCopy[instructionLanguage].other;
 
       const otherInlineContainer = document.createElement('div');
       otherInlineContainer.id = 'inline-other-container';
