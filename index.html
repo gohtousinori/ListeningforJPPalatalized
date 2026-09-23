@@ -10,10 +10,12 @@
   <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@1.1.0"></script>
   <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" />
   <style>
     :root {
       --ink: #ecf1f8;
@@ -545,6 +547,51 @@
       border-radius: 7px;
       padding: 8px 9px;
       font-family: 'IBM Plex Sans', 'Noto Sans JP', sans-serif;
+    }
+
+    .choices {
+      min-width: 300px;
+      flex: 1 1 300px;
+      margin: 0;
+      color: #f4f8ff;
+      font-size: var(--ui-font-base);
+    }
+
+    .choices__inner {
+      min-height: var(--ui-control-height);
+      padding: 10px 12px;
+      border: 1px solid #7fa2ce;
+      border-radius: 7px;
+      background: #050d1a;
+      color: #f4f8ff;
+    }
+
+    .choices.is-focused .choices__inner,
+    .choices.is-open .choices__inner {
+      border-color: #a8ccf5;
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+      z-index: 10;
+      border: 1px solid #7fa2ce;
+      background: #071221;
+      color: #f4f8ff;
+    }
+
+    .choices__input {
+      margin: 8px;
+      width: calc(100% - 16px);
+      border: 1px solid #7fa2ce;
+      border-radius: 5px;
+      background: #050d1a;
+      color: #f4f8ff;
+      font-family: inherit;
+    }
+
+    .choices__item--choice.is-highlighted {
+      background: rgba(79, 139, 207, 0.42);
     }
 
     #jspsych-content .jspsych-btn,
@@ -2896,11 +2943,11 @@
         return selectHtml;
       };
 
-      const buildLanguageSearchOptions = () => {
-        return languageOptions
+      const buildLanguageSelectOptions = () => {
+        return `<option value="">${languageCopy[instructionLanguage].select}</option>` + languageOptions
           .slice()
           .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
-          .map(item => `<option value="${item.replace(/"/g, '&quot;')}"></option>`)
+          .map(item => `<option value="${item.replace(/"/g, '&quot;')}">${item}</option>`)
           .join('');
       };
 
@@ -3039,11 +3086,23 @@
             </div>
           `;
 
+          const nativeLanguagePicker = new Choices(document.getElementById('wizard_native_language'), {
+            searchEnabled: true,
+            searchPlaceholderValue: instructionLanguage === 'en' ? 'Search language' : instructionLanguage === 'th' ? 'ค้นหาภาษา' : '言語を検索',
+            itemSelectText: '',
+            shouldSort: false,
+            allowHTML: false,
+            noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
+            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません'
+          });
+
           document.getElementById('wizard_study_year').value = state.studyYear;
           document.getElementById('wizard_study_month').value = state.studyMonth;
           document.getElementById('wizard_stay_year').value = state.stayYear;
           document.getElementById('wizard_stay_month').value = state.stayMonth;
-          document.getElementById('wizard_native_language').value = state.nativeLanguage;
+          if (state.nativeLanguage) {
+            nativeLanguagePicker.setChoiceByValue(state.nativeLanguage);
+          }
 
           document.getElementById('wizard_step1_next').addEventListener('click', function() {
             state.studyYear = document.getElementById('wizard_study_year')?.value || '';
@@ -3089,11 +3148,9 @@
               <div class="wizard-help-text">${wizardUiCopy.languageOrderHelp}</div>
               <div class="wizard-help-text">${wizardUiCopy.standardized}</div>
               <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input id="wizard_language_picker" type="search" list="wizard_language_suggestions" autocomplete="off" aria-describedby="wizard_language_search_hint" placeholder="${instructionLanguage === 'en' ? 'Type to search for a language' : instructionLanguage === 'th' ? 'พิมพ์เพื่อค้นหาภาษา' : '言語を入力して検索'}" style="min-width:300px; max-width:100%; background:#050d1a; color:#f4f8ff;" />
-                <datalist id="wizard_language_suggestions">${buildLanguageSearchOptions()}</datalist>
+                <select id="wizard_language_picker" aria-label="${instructionLanguage === 'en' ? 'Search and select a language' : instructionLanguage === 'th' ? 'ค้นหาและเลือกภาษา' : '言語を検索して選択'}">${buildLanguageSelectOptions()}</select>
                 <button type="button" id="wizard_add_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">${wizardUiCopy.add}</button>
               </div>
-              <div id="wizard_language_search_hint" class="wizard-help-text">${instructionLanguage === 'en' ? 'Choose a suggestion from the list.' : instructionLanguage === 'th' ? 'กรุณาเลือกจากรายการแนะนำเท่านั้น' : '候補リストから選択してください。'}</div>
               <div class="wizard-help-text">${wizardUiCopy.currentOrder}</div>
               <ol id="wizard_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
               <input id="wizard_languages_hidden" type="hidden" value="${state.learnedLanguages.join(', ')}" />
@@ -3110,6 +3167,16 @@
 
           const learnedListElement = document.getElementById('wizard_languages_ordered');
           const hiddenField = document.getElementById('wizard_languages_hidden');
+          const languagePickerElement = document.getElementById('wizard_language_picker');
+          const languagePicker = new Choices(languagePickerElement, {
+            searchEnabled: true,
+            searchPlaceholderValue: instructionLanguage === 'en' ? 'Search language' : instructionLanguage === 'th' ? 'ค้นหาภาษา' : '言語を検索',
+            itemSelectText: '',
+            shouldSort: false,
+            allowHTML: false,
+            noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
+            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません'
+          });
 
           const renderLanguages = () => {
             enforceNativeFirst();
@@ -3181,13 +3248,8 @@
           };
 
           document.getElementById('wizard_add_language_btn').addEventListener('click', function() {
-            addLanguage(document.getElementById('wizard_language_picker')?.value || '');
-          });
-
-          document.getElementById('wizard_language_picker').addEventListener('change', function() {
-            if (!languageOptions.includes(this.value.trim())) {
-              this.value = '';
-            }
+            addLanguage(languagePickerElement?.value || '');
+            languagePicker.removeActiveItems();
           });
 
           document.getElementById('wizard_step2_back').addEventListener('click', function() {
