@@ -102,6 +102,17 @@
       line-height: 1.45 !important;
     }
 
+    .wizard-validation-error {
+      margin-top: 10px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 154, 169, 0.62);
+      border-radius: 7px;
+      background: rgba(112, 35, 52, 0.3);
+      color: #ffd9df;
+      font-size: 0.85em !important;
+      line-height: 1.45 !important;
+    }
+
     #jspsych-html-button-response-stimulus + #jspsych-html-button-response-btngroup {
       margin-top: 20px !important;
     }
@@ -3490,7 +3501,7 @@
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button type="button" id="wizard_step1_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">${wizardUiCopy.next}</button>
               </div>
-              <div id="wizard_step1_error" style="margin-top:10px; color:#ff6b6b; font-size:0.95em; display:none;"></div>
+              <div id="wizard_step1_error" class="wizard-validation-error" role="alert" style="display:none;"></div>
               </div>
             </div>
           `;
@@ -3524,7 +3535,23 @@
             state.nativeLanguage = document.getElementById('wizard_native_language')?.value || '';
 
             if (!state.studyYear || !state.studyMonth || !state.stayYear || !state.stayMonth || !state.nativeLanguage) {
-              showError('wizard_step1_error', wizardUiCopy.required);
+              showError('wizard_step1_error', {
+                en: 'Please choose your study duration, residence duration, and native language before continuing.',
+                th: 'กรุณาเลือกระยะเวลาเรียน ระยะเวลาพำนัก และภาษาแม่ก่อนดำเนินการต่อ',
+                ja: '続行する前に、学習期間、滞在期間、母語を選択してください。'
+              }[instructionLanguage]);
+              const firstMissingField = [
+                ['wizard_study_year', state.studyYear],
+                ['wizard_study_month', state.studyMonth],
+                ['wizard_stay_year', state.stayYear],
+                ['wizard_stay_month', state.stayMonth],
+                ['wizard_native_language', state.nativeLanguage]
+              ].find(([, value]) => !value)?.[0];
+              const missingElement = document.getElementById(firstMissingField);
+              if (missingElement) {
+                missingElement.focus();
+                missingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
               return;
             }
 
