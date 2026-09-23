@@ -171,6 +171,77 @@
       box-shadow: 0 12px 24px rgba(7, 20, 40, 0.52);
     }
 
+    .audio-task {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .audio-task-kicker {
+      margin: 0 0 8px;
+      color: var(--accent-strong);
+      font-size: 0.78em !important;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .audio-task-title {
+      margin: 0 0 10px;
+      font-size: clamp(22px, 1.8vw + 16px, 32px) !important;
+      line-height: 1.25 !important;
+    }
+
+    .audio-task-instructions {
+      max-width: 600px;
+      margin: 0 auto;
+      color: var(--muted-ink);
+      line-height: 1.65 !important;
+    }
+
+    .audio-task-action {
+      margin: 26px auto 12px;
+      padding: 15px 28px;
+      min-width: min(100%, 280px);
+      min-height: 56px;
+      font-size: 1em !important;
+    }
+
+    .audio-task-status {
+      min-height: 1.5em;
+      margin: 0;
+      color: var(--muted-ink);
+      font-size: 0.9em !important;
+    }
+
+    .audio-task-help {
+      max-width: 600px;
+      margin: 24px auto 0;
+      padding: 14px 16px;
+      border: 1px solid rgba(181, 206, 240, 0.2);
+      border-radius: 8px;
+      color: var(--muted-ink);
+      font-size: 0.78em !important;
+      line-height: 1.6 !important;
+      text-align: left;
+    }
+
+    @media (max-width: 760px) {
+      .audio-task {
+        padding: 4px 0;
+      }
+
+      .audio-task-action {
+        width: 100%;
+        margin-top: 22px;
+      }
+
+      .audio-task-help {
+        margin-top: 20px;
+        padding: 12px;
+      }
+    }
+
     button:not(.jspsych-btn) {
       color: #f7fbff !important;
       border-color: rgba(150, 184, 226, 0.82) !important;
@@ -2854,15 +2925,26 @@
       const stim = jsPsych.timelineVariable('stimulus');
       const filename = stimulusToRomaji[stim];
       return `
-        <div style="text-align:center;">
-          <button id="play-stimulus" type="button" class="jspsych-btn" style="min-width:220px; margin:18px 8px 8px;">
+        <div class="audio-task">
+          <p class="audio-task-kicker">Listening task / 聴取課題</p>
+          <h2 class="audio-task-title">Listen and choose / 聞いて選ぶ</h2>
+          <p class="audio-task-instructions">
+            Press once to hear the sound. Answer choices will appear after playback finishes.<br>
+            ボタンを1回押して音声を聞いてください。再生終了後に回答の選択肢が表示されます。
+          </p>
+          <button id="play-stimulus" type="button" class="jspsych-btn audio-task-action">
             Play audio / 音声を再生
           </button>
           <audio id="stim-audio" preload="auto">
             <source src="audio/${filename}.mp3" type="audio/mpeg">
           </audio>
-          <div id="audio-status" role="status" aria-live="polite" style="min-height:1.5em; color:#bfd0e7; font-size:0.9em;">
+          <p id="audio-status" class="audio-task-status" role="status" aria-live="polite">
             Press the button to hear the sound / ボタンを押して音声を再生してください
+          </p>
+          <div class="audio-task-help">
+            <strong>If you cannot hear the sound / 音声が聞こえない場合</strong><br>
+            If you cannot hear the sound, please check your device settings, or switch your browser to Chrome/Firefox. If you are on a mobile phone and the audio still does not play, please take the test on a computer.<br>
+            音声が聞こえない場合は、お使いの機器をご確認いただくか、ブラウザをChromeまたはFirefoxに変更してください。スマートフォンでも音声が再生されない場合は、パソコンでテストを行ってください。
           </div>
         </div>
       `;
@@ -2963,26 +3045,6 @@
       `;
 
       buttonGroup.insertAdjacentElement('afterend', otherInlineContainer);
-
-      const audioTroubleshootNote = document.createElement('div');
-      audioTroubleshootNote.id = 'audio-troubleshoot-note';
-      audioTroubleshootNote.style.marginTop = '18px';
-      audioTroubleshootNote.style.paddingTop = '12px';
-      audioTroubleshootNote.style.borderTop = '1px solid rgba(181, 206, 240, 0.2)';
-      audioTroubleshootNote.style.maxWidth = '760px';
-      audioTroubleshootNote.style.marginLeft = 'auto';
-      audioTroubleshootNote.style.marginRight = 'auto';
-      audioTroubleshootNote.style.textAlign = 'center';
-      audioTroubleshootNote.style.color = 'var(--muted-ink)';
-      audioTroubleshootNote.style.fontSize = '0.72em';
-      audioTroubleshootNote.style.lineHeight = '1.6';
-      audioTroubleshootNote.style.opacity = '0.85';
-      audioTroubleshootNote.innerHTML = `
-        If you cannot hear the sound, please check your device settings, or switch your browser to Chrome/Firefox. If you are on a mobile phone and the audio still does not play, please take the test on a computer.<br>
-        音声が聞こえない場合は、お使いの機器をご確認いただくか、ブラウザをChromeまたはFirefoxに変更してください。スマートフォンでも音声が再生されない場合は、パソコンでテストを行ってください。
-      `;
-
-      otherInlineContainer.insertAdjacentElement('afterend', audioTroubleshootNote);
 
       const inlineOtherInput = document.getElementById('inline_other_input');
       const inlineOtherSubmit = document.getElementById('inline_other_submit');
