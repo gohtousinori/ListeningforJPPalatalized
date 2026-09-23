@@ -574,9 +574,9 @@
 
     .choices__list--dropdown,
     .choices__list[aria-expanded] {
-      position: fixed !important;
-      z-index: 2000 !important;
-      max-height: min(360px, calc(100vh - 24px)) !important;
+      position: absolute;
+      z-index: 2000;
+      max-height: min(360px, 55vh);
       overflow-y: auto;
       border: 1px solid #7fa2ce;
       background: #071221;
@@ -1549,27 +1549,18 @@
         return value;
       };
 
-      const positionLanguageDropdown = (choicesInstance) => {
-        const container = choicesInstance?.containerOuter?.element;
+      const allowLanguageDropdownOverflow = (choicesInstance) => {
+        const wizardScroll = displayElement?.querySelector('.wizard-scroll');
         const dropdown = choicesInstance?.dropdown?.element;
-        if (!container || !dropdown) return;
-
-        const rect = container.getBoundingClientRect();
-        const viewportPadding = 8;
-        const dropdownHeight = Math.min(360, window.innerHeight - viewportPadding * 2);
-        const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
-        const openAbove = spaceBelow < Math.min(260, dropdownHeight) && rect.top > spaceBelow;
-        const top = openAbove
-          ? Math.max(viewportPadding, rect.top - dropdownHeight)
-          : Math.min(window.innerHeight - dropdownHeight - viewportPadding, rect.bottom + 4);
-
-        dropdown.style.position = 'fixed';
-        dropdown.style.left = `${Math.max(viewportPadding, rect.left)}px`;
-        dropdown.style.top = `${top}px`;
-        dropdown.style.width = `${rect.width}px`;
-        dropdown.style.maxHeight = `${dropdownHeight}px`;
-        dropdown.style.overflowY = 'auto';
-        dropdown.style.zIndex = '2000';
+        if (!wizardScroll || !dropdown) return;
+        wizardScroll.style.overflow = 'visible';
+        displayElement.style.overflow = 'visible';
+        const restore = () => {
+          wizardScroll.style.overflow = '';
+          displayElement.style.overflow = 'hidden';
+          document.removeEventListener('click', restore, true);
+        };
+        setTimeout(() => document.addEventListener('click', restore, true), 0);
       };
 
       const normalizedLanguages = learnedLanguagesList
@@ -3147,10 +3138,9 @@
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
             noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
             fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
-            appendDropdownTo: 'body',
             position: 'auto'
           });
-          nativeLanguagePicker.passedElement.element.addEventListener('showDropdown', () => positionLanguageDropdown(nativeLanguagePicker));
+          nativeLanguagePicker.passedElement.element.addEventListener('showDropdown', () => allowLanguageDropdownOverflow(nativeLanguagePicker));
 
           document.getElementById('wizard_study_year').value = state.studyYear;
           document.getElementById('wizard_study_month').value = state.studyMonth;
@@ -3233,10 +3223,9 @@
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
             noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
             fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
-            appendDropdownTo: 'body',
             position: 'auto'
           });
-          languagePicker.passedElement.element.addEventListener('showDropdown', () => positionLanguageDropdown(languagePicker));
+          languagePicker.passedElement.element.addEventListener('showDropdown', () => allowLanguageDropdownOverflow(languagePicker));
 
           const renderLanguages = () => {
             enforceNativeFirst();
