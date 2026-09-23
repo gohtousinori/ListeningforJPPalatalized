@@ -275,7 +275,7 @@
       border-radius: 10px;
       background: rgba(10, 25, 45, 0.88);
       box-shadow: 0 16px 34px rgba(1, 7, 18, 0.34);
-      text-align: left;
+      text-align: center;
     }
 
     .consent-card-title {
@@ -306,6 +306,7 @@
       background: rgba(133, 171, 222, 0.12);
       color: #eaf2ff;
       line-height: 1.6 !important;
+      text-align: center;
     }
 
     .consent-contact strong {
@@ -1674,7 +1675,22 @@
       instruction3: 'You will complete 2 practice items first. Practice responses are not included in the analysis.',
       instruction4: 'The answer choices are shuffled. You may choose the same answer more than once.',
       instruction5: 'Respond naturally and promptly. There is no time limit.',
-      begin: 'Begin'
+      begin: 'Begin',
+      practiceTitle: 'Practice',
+      practiceText: 'You will complete 2 practice items before the main test. Practice responses are not included in the analysis. Press the button below when you are ready.',
+      mainTitle: 'Main test',
+      mainText: 'The main test will now begin. From this point onward, all responses will be recorded and used for analysis.',
+      submit: 'Submit responses to server',
+      other: 'Other',
+      next: 'Next',
+      back: 'Back',
+      remove: 'Remove',
+      fixed: 'Fixed',
+      select: 'Select',
+      currentOrder: 'Current order',
+      confirmation: 'Confirmation',
+      proceedListening: 'Proceed to listening test'
+      ,progressPractice: 'Practice', progressQuestion: 'Question'
     },
     th: {
       languageTitle: 'เลือกภาษาที่แสดง',
@@ -1691,7 +1707,22 @@
       instruction3: 'ก่อนเริ่มจริงจะมีข้อทดลอง 2 ข้อ ซึ่งไม่นำไปวิเคราะห์ผล',
       instruction4: 'ตัวเลือกคำตอบจะสลับลำดับ และสามารถเลือกคำตอบเดิมซ้ำได้',
       instruction5: 'ตอบตามที่ได้ยินอย่างเป็นธรรมชาติและรวดเร็ว ไม่มีการจำกัดเวลา',
-      begin: 'เริ่มทำแบบทดสอบ'
+      begin: 'เริ่มทำแบบทดสอบ',
+      practiceTitle: 'ข้อทดลอง',
+      practiceText: 'ก่อนเริ่มการทดสอบจริง จะมีข้อทดลอง 2 ข้อ คำตอบของข้อทดลองจะไม่ถูกนำไปวิเคราะห์ เมื่อพร้อมแล้วให้กดปุ่มด้านล่าง',
+      mainTitle: 'เริ่มการทดสอบจริง',
+      mainText: 'การทดสอบจริงกำลังจะเริ่มขึ้น ตั้งแต่ตอนนี้คำตอบทั้งหมดจะถูกบันทึกและใช้ในการวิเคราะห์',
+      submit: 'ส่งคำตอบไปยังเซิร์ฟเวอร์',
+      other: 'อื่น ๆ',
+      next: 'ถัดไป',
+      back: 'ย้อนกลับ',
+      remove: 'ลบ',
+      fixed: 'กำหนดไว้',
+      select: 'เลือก',
+      currentOrder: 'ลำดับปัจจุบัน',
+      confirmation: 'ตรวจสอบข้อมูล',
+      proceedListening: 'ไปยังการทดสอบเสียง'
+      ,progressPractice: 'ข้อทดลอง', progressQuestion: 'ข้อ'
     },
     ja: {
       languageTitle: '説明の言語を選択してください',
@@ -1708,9 +1739,115 @@
       instruction3: '本番の前に練習問題を2問行います。練習の回答は分析対象になりません。',
       instruction4: '選択肢の順番は入れ替わります。同じ答えを複数回選択しても構いません。',
       instruction5: '時間をかけすぎず、自然にお答えください。時間制限はありません。',
-      begin: '開始'
+      begin: '開始',
+      practiceTitle: '練習問題',
+      practiceText: '本番の前に練習問題を2問行います。練習の回答は分析対象になりません。準備ができたら下のボタンを押してください。',
+      mainTitle: '本番テスト',
+      mainText: '本番テストを開始します。これ以降の回答はすべて記録され、分析に使用されます。',
+      submit: '回答をサーバーに送信',
+      other: 'その他',
+      next: '次へ',
+      back: '戻る',
+      remove: '削除',
+      fixed: '固定',
+      select: '選択',
+      currentOrder: '現在の順序',
+      confirmation: '確認',
+      proceedListening: '音声テストへ進む'
+      ,progressPractice: '練習', progressQuestion: '問題'
     }
   };
+
+  function applyInstructionLanguage(root) {
+    if (!root) return;
+
+    const translations = {
+      en: [
+        ['Pre-survey / 事前質問', 'Pre-survey'],
+        ['学習期間（累積）はどのくらいですか？', 'How long have you studied Japanese in total?'],
+        ['滞在期間（合計）はどのくらいですか？', 'How long have you lived in Japan in total?'],
+        ['母語（第一言語）を選択してください。', 'Please select your native language.'],
+        ['学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。', 'Add the languages you have learned in chronological order. Your native language must come first.'],
+        ['学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。', 'Add languages learned in chronological order. Your native language must come first.'],
+        ['音韻論・音声学の学術的・理論的な学習経験はありますか。', 'Do you have academic or theoretical training in phonology or phonetics?'],
+        ['発音学習の経験はありますか。', 'Have you received formal pronunciation training?'],
+        ['今後の連絡のため、メールアドレスをご記入ください。', 'Email address for future contact'],
+        ['Language order / 言語順', 'Language order'],
+        ['Background / 背景情報', 'Background information'],
+        ['確認 / Confirmation', 'Confirmation'],
+        ['次へ', 'Next'], ['戻る', 'Back'], ['続行', 'Continue'], ['Remove', 'Remove'], ['Fixed', 'Fixed'],
+        ['Current order / 現在の順序', 'Current order'], ['Select / 選択してください', 'Select'],
+        ['Add from list / リストから追加', 'Add from list'], ['Add custom / 自由入力を追加', 'Add custom'],
+        ['Proceed / 続行', 'Continue'], ['Proceed to listening test / 音声テストへ進む', 'Proceed to listening test'],
+        ['練習問題 / Practice', 'Practice'], ['本番テスト開始 / Main Test Start', 'Main test'],
+        ['了解 / Close', 'Close']
+      ],
+      th: [
+        ['Pre-survey / 事前質問', 'แบบสอบถามก่อนเริ่ม'],
+        ['Please indicate your total duration of Japanese language study (years/months).', 'กรุณาระบุระยะเวลาที่เรียนภาษาญี่ปุ่นรวม (ปี/เดือน)'],
+        ['Please indicate your cumulative length of residence in Japan (years/months).', 'กรุณาระบุระยะเวลาที่พำนักในญี่ปุ่นรวม (ปี/เดือน)'],
+        ['Please select your native language (L1).', 'กรุณาเลือกภาษาแม่ของคุณ'],
+        ['Please add all languages you have learned (including your native language) in chronological order of learning.', 'กรุณาเพิ่มภาษาที่เคยเรียนตามลำดับการเรียน รวมภาษาแม่ของคุณ'],
+        ['The system will automatically calculate the total number of languages and the order of Japanese from this list.', 'ระบบจะคำนวณจำนวนภาษาและลำดับภาษาญี่ปุ่นจากรายการนี้โดยอัตโนมัติ'],
+        ['Please select from the standardized list below.', 'กรุณาเลือกจากรายการมาตรฐานด้านล่าง'],
+        ['Do you have academic and/or theoretical training in phonology and/or phonetics?', 'คุณมีประสบการณ์เรียนด้านสัทวิทยาหรือสัทศาสตร์เชิงวิชาการหรือทฤษฎีหรือไม่'],
+        ['Please enter your email address.', 'กรุณากรอกอีเมล'],
+        ['Have you received formal instruction in pronunciation? (Yes/No)', 'คุณเคยเรียนการออกเสียงอย่างเป็นทางการหรือไม่ (ใช่/ไม่ใช่)'],
+        ['If you answered Yes above, please enter the institution name.', 'หากตอบว่าใช่ กรุณากรอกชื่อสถาบัน'],
+        ['学習期間（累積）はどのくらいですか？', 'คุณเรียนภาษาญี่ปุ่นรวมเป็นระยะเวลานานเท่าใด'],
+        ['滞在期間（合計）はどのくらいですか？', 'คุณเคยพำนักอยู่ในญี่ปุ่นรวมเป็นระยะเวลานานเท่าใด'],
+        ['母語（第一言語）を選択してください。', 'กรุณาเลือกภาษาแม่ของคุณ'],
+        ['学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。', 'เพิ่มภาษาที่คุณเคยเรียนตามลำดับการเรียน โดยให้ภาษาแม่อยู่ลำดับแรก'],
+        ['音韻論・音声学の学術的・理論的な学習経験はありますか。', 'คุณมีประสบการณ์เรียนด้านสัทวิทยาหรือสัทศาสตร์เชิงวิชาการหรือทฤษฎีหรือไม่'],
+        ['発音学習の経験はありますか。', 'คุณเคยเรียนการออกเสียงอย่างเป็นทางการหรือไม่'],
+        ['今後の連絡のため、メールアドレスをご記入ください。', 'อีเมลสำหรับการติดต่อในอนาคต'],
+        ['Language order / 言語順', 'ลำดับภาษาที่เรียน'], ['Background / 背景情報', 'ข้อมูลพื้นฐาน'],
+        ['確認 / Confirmation', 'ตรวจสอบข้อมูล'], ['次へ', 'ถัดไป'], ['戻る', 'ย้อนกลับ'], ['続行', 'ดำเนินการต่อ'],
+        ['Remove', 'ลบ'], ['Fixed', 'กำหนดไว้'], ['Current order / 現在の順序', 'ลำดับปัจจุบัน'],
+        ['Select / 選択してください', 'เลือก'], ['Add from list / リストから追加', 'เพิ่มจากรายการ'],
+        ['Add custom / 自由入力を追加', 'เพิ่มแบบกำหนดเอง'], ['Proceed / 続行', 'ดำเนินการต่อ'],
+        ['Proceed to listening test / 音声テストへ進む', 'ไปยังการทดสอบเสียง'],
+        ['練習問題 / Practice', 'ข้อทดลอง'], ['本番テスト開始 / Main Test Start', 'เริ่มการทดสอบจริง'], ['了解 / Close', 'ปิด']
+      ],
+      ja: [
+        ['Pre-survey / 事前質問', '事前質問'],
+        ['Please indicate your total duration of Japanese language study (years/months).', '日本語の累積学習期間を入力してください（年・月）。'],
+        ['Please indicate your cumulative length of residence in Japan (years/months).', '日本滞在の累積期間を入力してください（年・月）。'],
+        ['Please select your native language (L1).', '母語を選択してください。'],
+        ['Please add all languages you have learned (including your native language) in chronological order of learning.', '学習した言語を学習順に追加してください。母語を最初にしてください。'],
+        ['The system will automatically calculate the total number of languages and the order of Japanese from this list.', 'このリストから学習言語数と日本語の順番を自動計算します。'],
+        ['Please select from the standardized list below.', '下の標準リストから選択してください。'],
+        ['Do you have academic and/or theoretical training in phonology and/or phonetics?', '音韻論・音声学の学術的または理論的な学習経験はありますか。'],
+        ['Please enter your email address.', 'メールアドレスを入力してください。'],
+        ['Have you received formal instruction in pronunciation? (Yes/No)', '発音の正式な指導を受けたことがありますか。（はい・いいえ）'],
+        ['If you answered Yes above, please enter the institution name.', '「はい」と回答した場合は、受講機関名を入力してください。'],
+        ['Please indicate your total duration of Japanese language study (years/months).', '日本語の累積学習期間を入力してください（年・月）。'],
+        ['Please indicate your cumulative length of residence in Japan (years/months).', '日本滞在の累積期間を入力してください（年・月）。'],
+        ['Please select your native language (L1).', '母語を選択してください。'],
+        ['Language order / 言語順', '言語順'], ['Background / 背景情報', '背景情報'], ['Confirmation', '確認'],
+        ['Next / 次へ', '次へ'], ['Back / 戻る', '戻る'], ['Proceed / 続行', '続行'], ['Remove', '削除'], ['Fixed', '固定'],
+        ['Current order / 現在の順序', '現在の順序'], ['Select / 選択してください', '選択してください'],
+        ['Add from list / リストから追加', 'リストから追加'], ['Add custom / 自由入力を追加', '自由入力を追加'],
+        ['Proceed to listening test / 音声テストへ進む', '音声テストへ進む'], ['練習問題 / Practice', '練習問題'],
+        ['本番テスト開始 / Main Test Start', '本番テスト'], ['了解 / Close', '閉じる']
+      ]
+    }[instructionLanguage] || [];
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach(node => {
+      let value = node.nodeValue;
+      translations.forEach(([from, to]) => {
+        value = value.split(from).join(to);
+      });
+      node.nodeValue = value;
+    });
+
+    root.querySelectorAll('option').forEach(option => {
+      if (option.value === '') option.textContent = languageCopy[instructionLanguage].select;
+    });
+  }
 
   const languageSelection = {
     type: jsPsychHtmlButtonResponse,
@@ -1850,6 +1987,8 @@
       buttonGroup.style.maxWidth = window.matchMedia('(max-width: 760px)').matches ? '100%' : '720px';
       buttonGroup.style.width = '100%';
       buttonGroup.style.margin = '12px auto 0';
+
+      const localizedOther = languageCopy[instructionLanguage].other;
       buttonGroup.style.position = 'sticky';
       buttonGroup.style.bottom = '0';
       buttonGroup.style.zIndex = '3';
@@ -1887,24 +2026,15 @@
   // ========================================
   const consentRefusal = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="text-align: center; padding: 30px 20px;">
-        <h1 style="font-size: 24px; margin: 0 0 20px 0; color: #ff6b6b;">
-          申し訳ございません / Sorry
-        </h1>
-        <div style="background: #333; color: #fff; padding: 20px; border: 1px solid #ff6b6b; border-radius: 5px; text-align: center; font-size: 14px; line-height: 1.8; margin-top: 20px;">
-          <p style="margin: 10px 0;">
-            <strong>同意していただけなかったため、本調査は終了いたします。</strong><br>
-            ご協力いただき、ありがとうございました。
-          </p>
-          <p style="margin: 10px 0;">
-            <strong>As consent was not provided, this survey will now be terminated.</strong><br>
-            Thank you for your time and consideration.
-          </p>
-        </div>
-      </div>
-    `,
-    choices: ['了解 / Close'],
+    stimulus: function() {
+      const message = {
+        en: ['Sorry', 'As consent was not provided, this survey will now end. Thank you for your time.'],
+        th: ['ขออภัย', 'เนื่องจากไม่ได้ให้ความยินยอม แบบสอบถามจะสิ้นสุดลง ขอบคุณสำหรับเวลาของคุณ'],
+        ja: ['申し訳ありません', '同意が得られなかったため、本調査を終了します。ご協力ありがとうございました。']
+      }[instructionLanguage];
+      return `<div style="text-align:center; padding:30px 20px;"><h1 style="font-size:clamp(24px,2vw + 16px,34px); color:#ff9baa;">${message[0]}</h1><div style="padding:20px; border:1px solid #ff9baa; border-radius:8px; text-align:center; line-height:1.8;"><p>${message[1]}</p></div></div>`;
+    },
+    choices: function() { return [instructionLanguage === 'en' ? 'Close' : instructionLanguage === 'th' ? 'ปิด' : '閉じる']; },
     button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
@@ -2664,6 +2794,7 @@
         const errorDiv = document.getElementById(targetId);
         if (errorDiv) {
           errorDiv.innerText = message;
+          applyInstructionLanguage(errorDiv);
           errorDiv.style.display = 'block';
         }
       };
@@ -3093,7 +3224,10 @@
         });
       };
 
+      const languageObserver = new MutationObserver(() => applyInstructionLanguage(displayElement));
+      languageObserver.observe(displayElement, { childList: true, subtree: true });
       renderStep();
+      applyInstructionLanguage(displayElement);
     }
   };
 
@@ -3287,7 +3421,8 @@
       const practiceItems = ['か', 'た'];
       const mainItems = ['し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ','きゃ','きゅ','きょ','ぎゃ','ぎゅ','ぎょ','しゃ','しゅ','しょ','じゃ','じゅ','じょ','ちゃ','ちゅ','ちょ','にゃ','にゅ','にょ','ひゃ','ひゅ','ひょ','ぴゃ','ぴゅ','ぴょ','びゃ','びゅ','びょ','みゃ','みゅ','みょ','りゃ','りゅ','りょ'];
       const currentItem = (isPractice ? practiceItems : mainItems).indexOf(stim) + 1;
-      updateStudyProgress(isPractice ? 'Practice' : 'Question', currentItem, isPractice ? 2 : 44);
+      const progressLabel = isPractice ? languageCopy[instructionLanguage].progressPractice : languageCopy[instructionLanguage].progressQuestion;
+      updateStudyProgress(progressLabel, currentItem, isPractice ? 2 : 44);
       let trialFinished = false;
 
       if (!audioEl || !playButton) {
@@ -3441,7 +3576,8 @@
         button.style.whiteSpace = 'normal';
         button.style.lineHeight = '1.3';
 
-        if ((button.textContent || '').includes('他')) {
+        if (Array.from(buttonGroup.children).indexOf(choiceWrapper) === buttonGroup.children.length - 1) {
+          button.textContent = localizedOther;
           choiceWrapper.style.gridColumn = '1 / -1';
           choiceWrapper.style.marginTop = '10px';
           inlineOtherChoiceIndex = Array.from(buttonGroup.children).indexOf(choiceWrapper);
@@ -3591,20 +3727,11 @@
 
   const dummyIntro = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">練習問題 / Practice</h2>
-        <p>Before the main test, you will complete <strong>2 practice items</strong> to familiarize yourself with the procedure.</p>
-        <p>Practice responses <strong>are not included in the final analysis</strong>; however, please answer them in the same manner as the main test.</p>
-        <p>When you are ready, please press the button below to begin practice.</p>
-        <hr style="margin: 18px 0; border-color: rgba(255,255,255,0.2);"/>
-        <h3 style="color: #aaa;">【日本語】</h3>
-        <p>本番テストの前に、<strong>2 問の練習問題</strong>があります。</p>
-        <p>練習問題の回答は採点・記録の対象には含まれませんが、本番と同様にご回答ください。</p>
-        <p>準備ができましたら、下のボタンを押して練習を開始してください。</p>
-      </div>
-    `,
-    choices: ['練習問題を始める / Begin practice'],
+    stimulus: function() {
+      const copy = languageCopy[instructionLanguage];
+      return `<div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;"><p class="audio-task-kicker">${copy.practiceTitle}</p><h2 style="text-align:center;">${copy.practiceTitle}</h2><p>${copy.practiceText}</p></div>`;
+    },
+    choices: function() { return [instructionLanguage === 'en' ? 'Begin practice' : instructionLanguage === 'th' ? 'เริ่มข้อทดลอง' : '練習を開始']; },
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
@@ -3616,15 +3743,11 @@
 
   const realStart = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">本番テスト開始 / Main Test Start</h2>
-        <p>The main test will now begin.</p>
-        <p>From this point onward, all responses will be recorded and used for analysis.</p>
-        <p>これより本番のテストを開始いたします。これからの回答はすべて記録され、結果の算出に使用されます。</p>
-      </div>
-    `,
-    choices: ['本番テスト開始 / Begin main test'],
+    stimulus: function() {
+      const copy = languageCopy[instructionLanguage];
+      return `<div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;"><p class="audio-task-kicker">${copy.mainTitle}</p><h2 style="text-align:center;">${copy.mainTitle}</h2><p>${copy.mainText}</p></div>`;
+    },
+    choices: function() { return [instructionLanguage === 'en' ? 'Begin main test' : instructionLanguage === 'th' ? 'เริ่มการทดสอบจริง' : '本番テストを開始']; },
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
   };
 
@@ -3640,24 +3763,15 @@
 
   const debrief = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <p>Thank you very much for your participation. Your responses are of great value to this study. We sincerely wish you continued success and good health.</p>
-      <p style="margin-top: 20px; color: #999;">ご協力いただき、誠にありがとうございました。皆様の貴重なご回答は、本研究の遂行に大変有益です。皆様の今後ますますのご活躍とご健勝をお祈り申し上げます。</p>
-      <div style="margin-top: 24px; padding: 16px 20px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 6px; font-size: 14px; line-height: 1.8; text-align: left;">
-        <p style="color: #ffcc00; margin: 0 0 8px 0;"><strong>📋 備考 / Note</strong></p>
-        <p style="margin: 0 0 6px 0;">Your responses will be submitted to the server when you press the button below. After the submission is completed, you will be able to download your <strong>response data file</strong> by clicking a button on the completion page.<br>
-        Submitting your data to the server may take up to <strong>2 minutes</strong>, depending on network conditions. Please wait until the completion page appears.<br>
-        Please retain this file in case of server or network issues; the researcher may request it at a later date via email:<br>
-        <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
-        <hr style="border-color: rgba(255,255,255,0.15); margin: 10px 0;"/>
-        <p style="margin: 0; color: #ccc;">送信ボタンを押すと、回答がサーバーに送信されます。送信完了後、完了画面のボタンをクリックして<strong>回答データファイル（ResultPattern.csv）</strong>をダウンロードできます。<br>
-        ネットワーク状況により、サーバーへの送信には<strong>最大2分程度</strong>かかる場合があります。完了画面が表示されるまでお待ちください。<br>
-        サーバーやインターネット接続に問題が生じた場合に備え、このファイルを保管しておいてください。<br>
-        後日、研究者よりファイルの提供をお願いする場合がございます。<br>
-        連絡先: <strong>u548378a@ecs.osaka-u.ac.jp</strong></p>
-      </div>
-    `,
-    choices: ['回答データをサーバーに送信する / Submit responses to server'],
+    stimulus: function() {
+      const messages = {
+        en: ['Thank you for participating.', 'Your responses will be submitted when you press the button below. Please wait for the completion page.', 'Please keep the downloaded response file for your records.'],
+        th: ['ขอบคุณสำหรับการเข้าร่วม', 'คำตอบของคุณจะถูกส่งเมื่อกดปุ่มด้านล่าง กรุณารอจนกว่าหน้าสำเร็จจะแสดงขึ้น', 'กรุณาเก็บไฟล์คำตอบที่ดาวน์โหลดไว้เป็นหลักฐาน'],
+        ja: ['ご協力ありがとうございました。', '下のボタンを押すと回答が送信されます。完了画面が表示されるまでお待ちください。', 'ダウンロードした回答ファイルを保管してください。']
+      }[instructionLanguage];
+      return `<div style="max-width:760px; margin:0 auto; text-align:center;"><h2>${messages[0]}</h2><div style="margin-top:24px; padding:20px; background:#1a1a1a; border:1px solid #ffcc00; border-radius:8px; line-height:1.8; text-align:center;"><p style="color:#ffda72; margin:0 0 10px;"><strong>${instructionLanguage === 'en' ? 'Note' : instructionLanguage === 'th' ? 'หมายเหตุ' : '備考'}</strong></p><p style="margin:0 0 8px;">${messages[1]}</p><p style="margin:0; color:#d5e1f1;">${messages[2]}<br>u548378a@ecs.osaka-u.ac.jp</p></div></div>`;
+    },
+    choices: function() { return [languageCopy[instructionLanguage].submit]; },
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>',
     on_load: function() {
       hideStudyProgress();
