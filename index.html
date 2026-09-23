@@ -574,6 +574,10 @@
 
     .choices__list--dropdown,
     .choices__list[aria-expanded] {
+      position: absolute;
+      z-index: 1000;
+      max-height: min(320px, 45vh);
+      overflow-y: auto;
       z-index: 10;
       border: 1px solid #7fa2ce;
       background: #071221;
@@ -3119,7 +3123,10 @@
             shouldSort: false,
             allowHTML: false,
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
-            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません'
+            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
+            fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
+            appendTo: 'body',
+            position: 'bottom'
           });
 
           document.getElementById('wizard_study_year').value = state.studyYear;
@@ -3201,7 +3208,10 @@
             shouldSort: false,
             allowHTML: false,
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
-            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません'
+            noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
+            fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
+            appendTo: 'body',
+            position: 'bottom'
           });
 
           const renderLanguages = () => {
