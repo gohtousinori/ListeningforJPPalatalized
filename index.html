@@ -250,6 +250,135 @@
       width: 100%;
     }
 
+    .consent-screen {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .consent-title {
+      margin: 0 0 8px;
+      color: #ffffff;
+      font-size: clamp(26px, 2vw + 18px, 38px) !important;
+      line-height: 1.2 !important;
+    }
+
+    .consent-subtitle {
+      margin: 0 0 24px;
+      color: var(--muted-ink);
+      font-size: 0.98em !important;
+    }
+
+    .consent-card {
+      padding: clamp(18px, 2vw + 10px, 28px);
+      border: 1px solid rgba(181, 206, 240, 0.48);
+      border-radius: 10px;
+      background: rgba(10, 25, 45, 0.88);
+      box-shadow: 0 16px 34px rgba(1, 7, 18, 0.34);
+      text-align: left;
+    }
+
+    .consent-card-title {
+      display: block;
+      margin-bottom: 14px;
+      color: #ffda72;
+      font-size: 1.08em !important;
+    }
+
+    .consent-notice {
+      margin: 0;
+      color: #f5f8ff;
+      line-height: 1.7 !important;
+    }
+
+    .consent-voluntary {
+      margin: 18px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid rgba(181, 206, 240, 0.24);
+      color: #dce8f8;
+      line-height: 1.7 !important;
+    }
+
+    .consent-contact {
+      margin: 18px 0 0;
+      padding: 12px 14px;
+      border-left: 3px solid var(--accent-strong);
+      background: rgba(133, 171, 222, 0.12);
+      color: #eaf2ff;
+      line-height: 1.6 !important;
+    }
+
+    .consent-contact strong {
+      color: #b9d7ff;
+    }
+
+    .consent-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .consent-actions .jspsych-btn {
+      min-width: 190px;
+      margin: 0;
+    }
+
+    .consent-actions .consent-accept {
+      background: linear-gradient(180deg, #287b62, #1c5b4a);
+      border-color: #8de0be;
+    }
+
+    .consent-actions .consent-decline {
+      background: rgba(91, 42, 55, 0.8);
+      border-color: rgba(240, 157, 174, 0.78);
+      color: #ffe8ed;
+    }
+
+    #study-progress {
+      display: none;
+      position: fixed;
+      right: 16px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      left: 16px;
+      z-index: 18;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 8px 12px 10px;
+      border: 1px solid rgba(181, 206, 240, 0.32);
+      border-radius: 8px;
+      background: rgba(7, 18, 35, 0.94);
+      box-shadow: 0 8px 22px rgba(2, 8, 18, 0.38);
+      pointer-events: none;
+    }
+
+    #study-progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+      color: #eaf2ff;
+      font-size: 0.78rem;
+      line-height: 1.2;
+    }
+
+    #study-progress-track {
+      width: 100%;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(181, 206, 240, 0.22);
+    }
+
+    #study-progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #78cdb0, #b7e7d2);
+      transition: width 220ms ease;
+    }
+
     @media (max-width: 760px) {
       .audio-task {
         padding: 4px 0;
@@ -263,6 +392,21 @@
       .audio-task-help {
         margin-top: 20px;
         padding: 12px;
+      }
+
+      .consent-actions {
+        flex-direction: column;
+      }
+
+      .consent-actions .jspsych-btn {
+        width: 100%;
+      }
+
+      #study-progress {
+        right: 8px;
+        bottom: max(6px, env(safe-area-inset-bottom));
+        left: 8px;
+        padding: 7px 10px 9px;
       }
     }
 
@@ -818,6 +962,45 @@
   ensurePersistentBranding();
   startBrandingObserver();
   startBrandingLayoutSync();
+
+  function updateStudyProgress(label, current, total) {
+    let progress = document.getElementById('study-progress');
+    if (!progress) {
+      progress = document.createElement('div');
+      progress.id = 'study-progress';
+      progress.setAttribute('role', 'progressbar');
+      progress.setAttribute('aria-valuemin', '0');
+      progress.innerHTML = `
+        <div id="study-progress-label">
+          <span id="study-progress-text"></span>
+          <span id="study-progress-percent"></span>
+        </div>
+        <div id="study-progress-track">
+          <div id="study-progress-fill"></div>
+        </div>
+      `;
+      document.body.appendChild(progress);
+    }
+
+    const safeTotal = Math.max(1, Number(total) || 1);
+    const safeCurrent = Math.min(Math.max(0, Number(current) || 0), safeTotal);
+    const percent = Math.round((safeCurrent / safeTotal) * 100);
+    const textEl = document.getElementById('study-progress-text');
+    const percentEl = document.getElementById('study-progress-percent');
+    const fillEl = document.getElementById('study-progress-fill');
+
+    if (textEl) textEl.textContent = `${label} ${safeCurrent} / ${safeTotal}`;
+    if (percentEl) percentEl.textContent = `${percent}%`;
+    if (fillEl) fillEl.style.width = `${percent}%`;
+    progress.setAttribute('aria-valuemax', String(safeTotal));
+    progress.setAttribute('aria-valuenow', String(safeCurrent));
+    progress.style.display = 'block';
+  }
+
+  function hideStudyProgress() {
+    const progress = document.getElementById('study-progress');
+    if (progress) progress.style.display = 'none';
+  }
 
   // ========================================
   // Mapping: stimulus (kana) -> audio filename (romaji, no extension)
@@ -1614,13 +1797,15 @@
       const stimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
       if (stimulusEl) {
         stimulusEl.innerHTML = `
-          <div style="text-align:center; padding:30px 20px;">
-            <h1 style="font-size:clamp(22px, 2vw + 16px, 32px); line-height:1.35; margin:0 0 20px;">${copy.title}</h1>
-            <div style="max-width:720px; margin:0 auto; background:rgba(12,26,46,0.72); color:#fff; padding:20px; border:1px solid rgba(181,206,240,0.36); border-radius:8px; text-align:left; line-height:1.7;">
-              <strong>${copy.noticeTitle}</strong>
-              <p style="margin:10px 0 0;">${copy.notice}</p>
-              <p style="margin:16px 0 0;">${instructionLanguage === 'en' ? 'Participation is voluntary. You may stop at any time. The data will be used for academic research and reported in aggregate.' : instructionLanguage === 'th' ? 'การเข้าร่วมเป็นความสมัครใจ คุณสามารถหยุดได้ทุกเมื่อ ข้อมูลจะใช้เพื่อการวิจัยและรายงานในภาพรวม' : '参加は自由意思です。いつでも中止できます。データは学術研究に使用し、集計した形で報告します。'}</p>
-              <p style="margin:16px 0 0;"><strong>Contact:</strong><br>u548378a@ecs.osaka-u.ac.jp</p>
+          <div class="consent-screen">
+            <p class="audio-task-kicker">Before you begin</p>
+            <h1 class="consent-title">${copy.title}</h1>
+            <p class="consent-subtitle">${instructionLanguage === 'en' ? 'Please read this notice before continuing.' : instructionLanguage === 'th' ? 'กรุณาอ่านข้อควรทราบก่อนดำเนินการต่อ' : '続行する前に、以下のお知らせをお読みください。'}</p>
+            <div class="consent-card">
+              <strong class="consent-card-title">${copy.noticeTitle}</strong>
+              <p class="consent-notice">${copy.notice}</p>
+              <p class="consent-voluntary">${instructionLanguage === 'en' ? 'Participation is voluntary. You may stop at any time. The data will be used for academic research and reported in aggregate.' : instructionLanguage === 'th' ? 'การเข้าร่วมเป็นความสมัครใจ คุณสามารถหยุดได้ทุกเมื่อ ข้อมูลจะใช้เพื่อการวิจัยและรายงานในภาพรวม' : '参加は自由意思です。いつでも中止できます。データは学術研究に使用し、集計した形で報告します。'}</p>
+              <p class="consent-contact"><strong>Contact / ติดต่อ / 連絡先</strong><br>u548378a@ecs.osaka-u.ac.jp</p>
             </div>
           </div>
         `;
@@ -1629,13 +1814,20 @@
         window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches ||
         window.matchMedia('(max-width: 760px)').matches
       );
+      const consentButtonGroup = document.getElementById('jspsych-html-button-response-btngroup');
+      if (consentButtonGroup) {
+        consentButtonGroup.classList.add('consent-actions');
+        Array.from(consentButtonGroup.querySelectorAll('button.jspsych-btn')).forEach((button) => {
+          button.classList.add(button.textContent.trim() === copy.consent ? 'consent-accept' : 'consent-decline');
+        });
+      }
       if (!shouldUsePinnedConsentLayout) {
         return;
       }
 
       const contentCard = document.getElementById('jspsych-content');
       const currentStimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
-      const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
+      const buttonGroup = consentButtonGroup;
       if (!contentCard || !currentStimulusEl || !buttonGroup) {
         return;
       }
@@ -1680,6 +1872,7 @@
         if (button) {
           button.style.width = '100%';
           button.style.margin = '0';
+          button.classList.add(button.textContent.trim() === copy.consent ? 'consent-accept' : 'consent-decline');
         }
       });
     },
@@ -3089,6 +3282,12 @@
       const audioEl = document.getElementById('stim-audio');
       const playButton = document.getElementById('play-stimulus');
       const statusEl = document.getElementById('audio-status');
+      const stim = jsPsych.timelineVariable('stimulus');
+      const isPractice = jsPsych.timelineVariable('task') === 'dummy_response';
+      const practiceItems = ['か', 'た'];
+      const mainItems = ['し','ち','ひ','に','ぎ','じ','き','り','み','び','ぴ','きゃ','きゅ','きょ','ぎゃ','ぎゅ','ぎょ','しゃ','しゅ','しょ','じゃ','じゅ','じょ','ちゃ','ちゅ','ちょ','にゃ','にゅ','にょ','ひゃ','ひゅ','ひょ','ぴゃ','ぴゅ','ぴょ','びゃ','びゅ','びょ','みゃ','みゅ','みょ','りゃ','りゅ','りょ'];
+      const currentItem = (isPractice ? practiceItems : mainItems).indexOf(stim) + 1;
+      updateStudyProgress(isPractice ? 'Practice' : 'Question', currentItem, isPractice ? 2 : 44);
       let trialFinished = false;
 
       if (!audioEl || !playButton) {
@@ -3459,7 +3658,10 @@
       </div>
     `,
     choices: ['回答データをサーバーに送信する / Submit responses to server'],
-    button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
+    button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>',
+    on_load: function() {
+      hideStudyProgress();
+    }
   };
   timeline.push(debrief);
 
