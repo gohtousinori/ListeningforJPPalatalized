@@ -1521,24 +1521,29 @@
         const content = document.getElementById('jspsych-content');
         if (!content) return;
 
+        const completionCopy = {
+          en: {
+            thanks: 'Thank you for your participation.', saved: 'Your responses have been recorded successfully.', download: 'Click the button below to download your response file.', limit: 'Please participate only once.', contact: 'Questions and contact', phone: 'Phone', researcher: 'Researcher', downloadButton: 'Download results'
+          },
+          th: {
+            thanks: 'ขอบคุณสำหรับการเข้าร่วมการวิจัย', saved: 'ระบบบันทึกคำตอบของคุณเรียบร้อยแล้ว', download: 'กดปุ่มด้านล่างเพื่อดาวน์โหลดไฟล์คำตอบ', limit: 'กรุณาเข้าร่วมการวิจัยเพียงครั้งเดียว', contact: 'คำถามและข้อมูลติดต่อ', phone: 'โทรศัพท์', researcher: 'ผู้วิจัย', downloadButton: 'ดาวน์โหลดผลการทดสอบ'
+          },
+          ja: {
+            thanks: 'ご協力ありがとうございました。', saved: '回答が正常に記録されました。', download: '下のボタンを押して回答ファイルをダウンロードしてください。', limit: '参加はお一人につき1回までとしてください。', contact: 'お問い合わせ', phone: '電話', researcher: '研究者', downloadButton: '結果をダウンロード'
+          }
+        }[instructionLanguage];
+
         content.innerHTML = `
           <div style="text-align:center; max-width:760px; margin:0 auto; color:#fff;">
-            <h2>ご協力ありがとうございました。</h2>
-            <p style="font-size:1.05em; line-height:1.8;">ご回答はサーバーに正常に保存されました。</p>
-            <p style="font-size:1.05em; line-height:1.8;">下のボタンをクリックすると、テスト結果ファイルをダウンロードできます。</p>
-            <p style="font-size:1.05em; line-height:1.8;">なお、誠に恐縮ですが、お一人につきご参加は1回までとさせていただきます。</p>
-            <hr style="margin:24px 0; border-color:rgba(255,255,255,0.2);" />
-            <h2>Thank you once again for your participation.</h2>
-            <p style="font-size:1.05em; line-height:1.8;">Your responses have been successfully recorded on the server.</p>
-            <p style="font-size:1.05em; line-height:1.8;">Please click the button below to download your test results.</p>
-            <p style="font-size:1.05em; line-height:1.8;">We respectfully request that each person participate no more than once.</p>
-            <div style="margin-top:24px; padding:16px 20px; border:1px solid rgba(183, 209, 243, 0.3); border-radius:8px; text-align:left; line-height:1.8;">
-              <p style="margin:0 0 8px 0;"><strong>ご質問やご意見、お問い合わせ / Questions, Feedback, and Contact:</strong></p>
-              <p style="margin:0;">ご質問やご意見、またはその他のお問い合わせがございましたら、下記の連絡先までご連絡ください。</p>
-              <p style="margin:0 0 8px 0;">Should you have any questions, feedback, or other inquiries, please contact us using the details below.</p>
-              <p style="margin:0;"><strong>Phone:</strong> (+81) 070-9192-6459<br><strong>Email:</strong> u548378a@ecs.osaka-u.ac.jp<br><strong>研究担当者 / Researcher:</strong> ケハナン アカラポン (Akarapong Kehanan)</p>
+            <h2>${completionCopy.thanks}</h2>
+            <p style="font-size:1.05em; line-height:1.8;">${completionCopy.saved}</p>
+            <p style="font-size:1.05em; line-height:1.8;">${completionCopy.download}</p>
+            <p style="font-size:1.05em; line-height:1.8;">${completionCopy.limit}</p>
+            <div style="margin-top:24px; padding:16px 20px; border:1px solid rgba(183, 209, 243, 0.3); border-radius:8px; text-align:center; line-height:1.8;">
+              <p style="margin:0 0 8px 0;"><strong>${completionCopy.contact}</strong></p>
+              <p style="margin:0;"><strong>${completionCopy.phone}:</strong> (+81) 070-9192-6459<br><strong>Email:</strong> u548378a@ecs.osaka-u.ac.jp<br><strong>${completionCopy.researcher}:</strong> ケハナン アカラポン</p>
             </div>
-            <button type="button" id="download_result_btn" class="jspsych-btn" style="margin-top:18px; min-width:240px;">Download Results / 結果をダウンロード</button>
+            <button type="button" id="download_result_btn" class="jspsych-btn" style="margin-top:18px; min-width:240px;">${completionCopy.downloadButton}</button>
           </div>
         `;
 
@@ -1616,10 +1621,11 @@
       queueSubmission(payload);
 
       showLoadingOverlay(
-        'Submitting your responses, please wait...<br>' +
-        '<span style="opacity:0.85; font-size:0.85em;">This may take up to a minute depending on your connection. Please do not close this page.</span><br><br>' +
-        '回答を送信しています。しばらくお待ちください…<br>' +
-        '<span style="opacity:0.85; font-size:0.85em;">通信状況によっては最大1分程度かかる場合があります。このページを閉じないでください。</span>'
+        instructionLanguage === 'en'
+          ? 'Submitting your responses. Please wait and do not close this page.'
+          : instructionLanguage === 'th'
+          ? 'กำลังส่งคำตอบ กรุณารอสักครู่และอย่าปิดหน้านี้'
+          : '回答を送信しています。しばらくお待ちください。このページを閉じないでください。'
       );
 
       submitWithRetry(payload, 3, 2000)
@@ -1663,6 +1669,8 @@
     en: {
       languageTitle: 'Choose your language',
       languageHint: 'This controls the instructions and guidance shown during the study.',
+      beforeBegin: 'Before you begin',
+      contact: 'Contact',
       continue: 'Continue',
       title: 'Japanese Speech Perception Study',
       noticeTitle: 'Important notice',
@@ -1695,6 +1703,8 @@
     th: {
       languageTitle: 'เลือกภาษาที่แสดง',
       languageHint: 'ภาษานี้จะใช้แสดงวิธีทำและคำแนะนำระหว่างการทดสอบ',
+      beforeBegin: 'ก่อนเริ่ม',
+      contact: 'ติดต่อ',
       continue: 'ดำเนินการต่อ',
       title: 'แบบทดสอบการรับรู้เสียงภาษาญี่ปุ่น',
       noticeTitle: 'ข้อควรทราบ',
@@ -1727,6 +1737,8 @@
     ja: {
       languageTitle: '説明の言語を選択してください',
       languageHint: 'この言語でテスト方法と案内を表示します。',
+      beforeBegin: '開始前のご案内',
+      contact: '連絡先',
       continue: '続行',
       title: '日本語音声聴覚識別調査',
       noticeTitle: '重要なお知らせ',
@@ -1763,6 +1775,7 @@
 
     const translations = {
       en: [
+        ['Study setup / 調査設定', 'Study setup'], ['Language / 言語', 'Language'], ['Before you begin', 'Before you begin'], ['Contact / ติดต่อ / 連絡先', 'Contact'],
         ['Pre-survey / 事前質問', 'Pre-survey'],
         ['学習期間（累積）はどのくらいですか？', 'How long have you studied Japanese in total?'],
         ['滞在期間（合計）はどのくらいですか？', 'How long have you lived in Japan in total?'],
@@ -1771,11 +1784,24 @@
         ['学習した言語（母語を含む）を、学習順に追加してください（最初は必ず母語）。', 'Add languages learned in chronological order. Your native language must come first.'],
         ['音韻論・音声学の学術的・理論的な学習経験はありますか。', 'Do you have academic or theoretical training in phonology or phonetics?'],
         ['発音学習の経験はありますか。', 'Have you received formal pronunciation training?'],
+        ['Please indicate your total duration of Japanese language study (years/months).', 'How long have you studied Japanese in total?'],
+        ['Please indicate your cumulative length of residence in Japan (years/months).', 'How long have you lived in Japan in total?'],
+        ['※日本人の方は、この項目を現在の年齢として入力してください。', 'If you are Japanese, please enter your current age for this item.'],
+        ['※日本人の方は、この項目も現在の年齢として入力してください。', 'If you are Japanese, please enter your current age for this item as well.'],
+        ['Please select your native language (L1).', 'Please select your native language.'],
+        ['Please add all languages you have learned (including your native language) in chronological order of learning.', 'Add languages learned in chronological order. Your native language must come first.'],
+        ['The system will automatically calculate the total number of languages and the order of Japanese from this list.', 'The system will calculate the number of languages and the order of Japanese automatically.'],
+        ['Please select from the standardized list below.', 'Please select from the standardized list below.'],
+        ['Do you have academic and/or theoretical training in phonology and/or phonetics?', 'Do you have academic or theoretical training in phonology or phonetics?'],
+        ['Have you received formal instruction in pronunciation? (Yes/No)', 'Have you received formal pronunciation training?'],
+        ['If you answered Yes above, please enter the institution name.', 'If yes, please enter the institution name.'],
+        ['For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).', 'For this item, count only formal training from accredited institutions or officially recognized programs. Self-study is not counted, except for online courses specifically focused on pronunciation.'],
+        ['この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。', 'This item concerns formal training at an accredited institution or officially recognized program. Self-study is not included, except for online courses specifically focused on pronunciation.'],
         ['今後の連絡のため、メールアドレスをご記入ください。', 'Email address for future contact'],
         ['Language order / 言語順', 'Language order'],
         ['Background / 背景情報', 'Background information'],
         ['確認 / Confirmation', 'Confirmation'],
-        ['次へ', 'Next'], ['戻る', 'Back'], ['続行', 'Continue'], ['Remove', 'Remove'], ['Fixed', 'Fixed'],
+        ['Next / 次へ', 'Next'], ['Back / 戻る', 'Back'], ['次へ', 'Next'], ['戻る', 'Back'], ['続行', 'Continue'], ['Remove', 'Remove'], ['Fixed', 'Fixed'],
         ['Current order / 現在の順序', 'Current order'], ['Select / 選択してください', 'Select'],
         ['Add from list / リストから追加', 'Add from list'], ['Add custom / 自由入力を追加', 'Add custom'],
         ['Proceed / 続行', 'Continue'], ['Proceed to listening test / 音声テストへ進む', 'Proceed to listening test'],
@@ -1783,9 +1809,12 @@
         ['了解 / Close', 'Close']
       ],
       th: [
+        ['Study setup / 調査設定', 'การตั้งค่าแบบสอบถาม'], ['Language / 言語', 'ภาษา'], ['Before you begin', 'ก่อนเริ่ม'], ['Contact / ติดต่อ / 連絡先', 'ติดต่อ'],
         ['Pre-survey / 事前質問', 'แบบสอบถามก่อนเริ่ม'],
         ['Please indicate your total duration of Japanese language study (years/months).', 'กรุณาระบุระยะเวลาที่เรียนภาษาญี่ปุ่นรวม (ปี/เดือน)'],
         ['Please indicate your cumulative length of residence in Japan (years/months).', 'กรุณาระบุระยะเวลาที่พำนักในญี่ปุ่นรวม (ปี/เดือน)'],
+        ['※日本人の方は、この項目を現在の年齢として入力してください。', 'หากเป็นคนญี่ปุ่น กรุณากรอกอายุปัจจุบันในข้อนี้'],
+        ['※日本人の方は、この項目も現在の年齢として入力してください。', 'หากเป็นคนญี่ปุ่น กรุณากรอกอายุปัจจุบันในข้อนี้ด้วย'],
         ['Please select your native language (L1).', 'กรุณาเลือกภาษาแม่ของคุณ'],
         ['Please add all languages you have learned (including your native language) in chronological order of learning.', 'กรุณาเพิ่มภาษาที่เคยเรียนตามลำดับการเรียน รวมภาษาแม่ของคุณ'],
         ['The system will automatically calculate the total number of languages and the order of Japanese from this list.', 'ระบบจะคำนวณจำนวนภาษาและลำดับภาษาญี่ปุ่นจากรายการนี้โดยอัตโนมัติ'],
@@ -1794,6 +1823,8 @@
         ['Please enter your email address.', 'กรุณากรอกอีเมล'],
         ['Have you received formal instruction in pronunciation? (Yes/No)', 'คุณเคยเรียนการออกเสียงอย่างเป็นทางการหรือไม่ (ใช่/ไม่ใช่)'],
         ['If you answered Yes above, please enter the institution name.', 'หากตอบว่าใช่ กรุณากรอกชื่อสถาบัน'],
+        ['For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).', 'ข้อนี้ให้นับเฉพาะการเรียนอย่างเป็นทางการจากสถาบันที่ได้รับการรับรองหรือหลักสูตรที่ได้รับการยอมรับ ไม่รวมการเรียนด้วยตนเอง ยกเว้นหลักสูตรออนไลน์ที่เน้นการออกเสียงโดยเฉพาะ'],
+        ['この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。', 'ข้อนี้พิจารณาเฉพาะการเรียนอย่างเป็นทางการจากสถาบันที่ได้รับการรับรองหรือหลักสูตรที่ได้รับการยอมรับ ไม่รวมการเรียนด้วยตนเอง ยกเว้นหลักสูตรออนไลน์ที่เน้นการออกเสียงโดยเฉพาะ'],
         ['学習期間（累積）はどのくらいですか？', 'คุณเรียนภาษาญี่ปุ่นรวมเป็นระยะเวลานานเท่าใด'],
         ['滞在期間（合計）はどのくらいですか？', 'คุณเคยพำนักอยู่ในญี่ปุ่นรวมเป็นระยะเวลานานเท่าใด'],
         ['母語（第一言語）を選択してください。', 'กรุณาเลือกภาษาแม่ของคุณ'],
@@ -1802,7 +1833,7 @@
         ['発音学習の経験はありますか。', 'คุณเคยเรียนการออกเสียงอย่างเป็นทางการหรือไม่'],
         ['今後の連絡のため、メールアドレスをご記入ください。', 'อีเมลสำหรับการติดต่อในอนาคต'],
         ['Language order / 言語順', 'ลำดับภาษาที่เรียน'], ['Background / 背景情報', 'ข้อมูลพื้นฐาน'],
-        ['確認 / Confirmation', 'ตรวจสอบข้อมูล'], ['次へ', 'ถัดไป'], ['戻る', 'ย้อนกลับ'], ['続行', 'ดำเนินการต่อ'],
+        ['確認 / Confirmation', 'ตรวจสอบข้อมูล'], ['Next / 次へ', 'ถัดไป'], ['Back / 戻る', 'ย้อนกลับ'], ['次へ', 'ถัดไป'], ['戻る', 'ย้อนกลับ'], ['続行', 'ดำเนินการต่อ'],
         ['Remove', 'ลบ'], ['Fixed', 'กำหนดไว้'], ['Current order / 現在の順序', 'ลำดับปัจจุบัน'],
         ['Select / 選択してください', 'เลือก'], ['Add from list / リストから追加', 'เพิ่มจากรายการ'],
         ['Add custom / 自由入力を追加', 'เพิ่มแบบกำหนดเอง'], ['Proceed / 続行', 'ดำเนินการต่อ'],
@@ -1810,9 +1841,12 @@
         ['練習問題 / Practice', 'ข้อทดลอง'], ['本番テスト開始 / Main Test Start', 'เริ่มการทดสอบจริง'], ['了解 / Close', 'ปิด']
       ],
       ja: [
+        ['Study setup / 調査設定', '調査設定'], ['Language / 言語', '言語'], ['Before you begin', '開始前のご案内'], ['Contact / ติดต่อ / 連絡先', '連絡先'],
         ['Pre-survey / 事前質問', '事前質問'],
         ['Please indicate your total duration of Japanese language study (years/months).', '日本語の累積学習期間を入力してください（年・月）。'],
         ['Please indicate your cumulative length of residence in Japan (years/months).', '日本滞在の累積期間を入力してください（年・月）。'],
+        ['※日本人の方は、この項目を現在の年齢として入力してください。', '日本人の方は、この項目に現在の年齢を入力してください。'],
+        ['※日本人の方は、この項目も現在の年齢として入力してください。', '日本人の方は、この項目にも現在の年齢を入力してください。'],
         ['Please select your native language (L1).', '母語を選択してください。'],
         ['Please add all languages you have learned (including your native language) in chronological order of learning.', '学習した言語を学習順に追加してください。母語を最初にしてください。'],
         ['The system will automatically calculate the total number of languages and the order of Japanese from this list.', 'このリストから学習言語数と日本語の順番を自動計算します。'],
@@ -1821,6 +1855,8 @@
         ['Please enter your email address.', 'メールアドレスを入力してください。'],
         ['Have you received formal instruction in pronunciation? (Yes/No)', '発音の正式な指導を受けたことがありますか。（はい・いいえ）'],
         ['If you answered Yes above, please enter the institution name.', '「はい」と回答した場合は、受講機関名を入力してください。'],
+        ['For this item, count only formal training from accredited institutions or officially recognized programs. Self-study at home is not counted (except online courses directly focused on pronunciation).', 'この項目では、認定教育機関または公的に認められたプログラムでの正式な学習のみを対象とします。独学は対象外ですが、発音に特化したオンライン講座は含みます。'],
+        ['この項目では、認定された教育機関または公的な制度下のプログラムにおける正式な学習のみを対象とします。自宅での独学は対象外です（ただし、発音に直接関連するオンライン講座は対象に含みます）。', 'この項目では、認定教育機関または公的に認められたプログラムでの正式な学習のみを対象とします。独学は対象外ですが、発音に特化したオンライン講座は含みます。'],
         ['Please indicate your total duration of Japanese language study (years/months).', '日本語の累積学習期間を入力してください（年・月）。'],
         ['Please indicate your cumulative length of residence in Japan (years/months).', '日本滞在の累積期間を入力してください（年・月）。'],
         ['Please select your native language (L1).', '母語を選択してください。'],
@@ -1838,9 +1874,14 @@
     while (walker.nextNode()) textNodes.push(walker.currentNode);
     textNodes.forEach(node => {
       let value = node.nodeValue;
-      translations.forEach(([from, to]) => {
-        value = value.split(from).join(to);
-      });
+      translations
+        .slice()
+        .sort((left, right) => right[0].length - left[0].length)
+        .forEach(([from, to]) => {
+          if (from && value.includes(from)) {
+            value = value.split(from).join(to);
+          }
+        });
       node.nodeValue = value;
     });
 
@@ -1935,14 +1976,14 @@
       if (stimulusEl) {
         stimulusEl.innerHTML = `
           <div class="consent-screen">
-            <p class="audio-task-kicker">Before you begin</p>
+            <p class="audio-task-kicker">${copy.beforeBegin}</p>
             <h1 class="consent-title">${copy.title}</h1>
             <p class="consent-subtitle">${instructionLanguage === 'en' ? 'Please read this notice before continuing.' : instructionLanguage === 'th' ? 'กรุณาอ่านข้อควรทราบก่อนดำเนินการต่อ' : '続行する前に、以下のお知らせをお読みください。'}</p>
             <div class="consent-card">
               <strong class="consent-card-title">${copy.noticeTitle}</strong>
               <p class="consent-notice">${copy.notice}</p>
               <p class="consent-voluntary">${instructionLanguage === 'en' ? 'Participation is voluntary. You may stop at any time. The data will be used for academic research and reported in aggregate.' : instructionLanguage === 'th' ? 'การเข้าร่วมเป็นความสมัครใจ คุณสามารถหยุดได้ทุกเมื่อ ข้อมูลจะใช้เพื่อการวิจัยและรายงานในภาพรวม' : '参加は自由意思です。いつでも中止できます。データは学術研究に使用し、集計した形で報告します。'}</p>
-              <p class="consent-contact"><strong>Contact / ติดต่อ / 連絡先</strong><br>u548378a@ecs.osaka-u.ac.jp</p>
+              <p class="consent-contact"><strong>${copy.contact}</strong><br>u548378a@ecs.osaka-u.ac.jp</p>
             </div>
           </div>
         `;
@@ -3130,36 +3171,45 @@
         const languageMetrics = computeLanguageMetrics(state.learnedLanguages);
         const email = getEmail();
         const institution = state.pronExperience === '有' ? state.institution.trim() : '';
+        const confirmationCopy = {
+          en: {
+            title: 'Confirmation', basic: 'Basic information', duration: 'Study duration', residence: 'Residence duration in Japan', native: 'Native language', languages: 'Learned languages', order: 'Learning order', japaneseOrder: 'Japanese language order', total: 'Total learned languages', other: 'Other information', phonology: 'Phonology/phonetics training', pronunciation: 'Pronunciation training', institution: 'Institution', none: '(none)', email: 'Email', note: 'If everything looks correct, continue to the listening test. You can return only from this screen.', back: 'Back', next: 'Proceed to listening test'
+          },
+          th: {
+            title: 'ตรวจสอบข้อมูล', basic: 'ข้อมูลพื้นฐาน', duration: 'ระยะเวลาเรียนภาษา', residence: 'ระยะเวลาพำนักในญี่ปุ่น', native: 'ภาษาแม่', languages: 'ภาษาที่เรียน', order: 'ลำดับการเรียน', japaneseOrder: 'ลำดับภาษาญี่ปุ่น', total: 'จำนวนภาษาที่เรียนทั้งหมด', other: 'ข้อมูลอื่น ๆ', phonology: 'ประสบการณ์ด้านสัทวิทยา/สัทศาสตร์', pronunciation: 'ประสบการณ์เรียนการออกเสียง', institution: 'สถาบัน', none: '(ไม่มี)', email: 'อีเมล', note: 'หากข้อมูลถูกต้อง กรุณาดำเนินการไปยังการทดสอบเสียง คุณสามารถย้อนกลับได้เฉพาะหน้านี้', back: 'ย้อนกลับ', next: 'ไปยังการทดสอบเสียง'
+          },
+          ja: {
+            title: '確認', basic: '基本情報', duration: '学習期間', residence: '日本滞在期間', native: '母語', languages: '学習言語', order: '学習順', japaneseOrder: '日本語の順番', total: '学習言語数', other: 'その他の情報', phonology: '音韻論・音声学の学習経験', pronunciation: '発音学習の経験', institution: '受講機関', none: '（なし）', email: 'メールアドレス', note: '内容に問題がなければ、音声テストへ進んでください。この画面からのみ戻ることができます。', back: '戻る', next: '音声テストへ進む'
+          }
+        }[instructionLanguage];
 
         displayElement.innerHTML = `
           <div style="color:#fff; text-align:left; max-width:900px; margin:0 auto; display:flex; flex-direction:column; height:100%; min-height:0;">
             <div class="wizard-scroll">
-            <h2 style="text-align:center; margin-top:0;">確認 / Confirmation</h2>
+            <h2 style="text-align:center; margin-top:0;">${confirmationCopy.title}</h2>
             <div style="background:#111; border:1px solid #444; border-radius:8px; padding:18px 20px; line-height:1.8;">
-              <h3 style="margin-top:0;">1. 基本情報 / Basic Information</h3>
-              <div><strong>学習期間 / Study duration:</strong> ${state.studyYear} year(s) / ${state.studyMonth} month(s)</div>
-              <div><strong>滞在期間 / Residence duration in Japan:</strong> ${state.stayYear} year(s) / ${state.stayMonth} month(s)</div>
-              <div><strong>母語 / Native language:</strong> ${state.nativeLanguage}</div>
-              <h3>2. 学習言語リスト / Learned Language List</h3>
-              <div><strong>学習順 / Learning order:</strong> ${learnedLanguagesList || '(none)'}</div>
-              <div><strong>日本語の順番 / Japanese language order:</strong> ${languageMetrics.japaneseLanguageOrder || '(not found)'}</div>
-              <div><strong>学習言語数 / Total learned languages:</strong> ${languageMetrics.totalLanguagesLearned || '(not found)'}</div>
-              <h3>3. その他 / Other Information</h3>
-              <div><strong>音韻論・音声学の学習経験 / Phonology/phonetics training:</strong> ${state.phonologyTheoryExperience}</div>
-              <div><strong>発音学習の経験 / Pronunciation training experience:</strong> ${state.pronExperience}</div>
-              <div><strong>受講機関 / Institution:</strong> ${institution || '(none)'}</div>
-              <div><strong>Email:</strong> ${email || '(none)'}</div>
+              <h3 style="margin-top:0;">1. ${confirmationCopy.basic}</h3>
+              <div><strong>${confirmationCopy.duration}:</strong> ${state.studyYear} / ${state.studyMonth}</div>
+              <div><strong>${confirmationCopy.residence}:</strong> ${state.stayYear} / ${state.stayMonth}</div>
+              <div><strong>${confirmationCopy.native}:</strong> ${state.nativeLanguage}</div>
+              <h3>2. ${confirmationCopy.languages}</h3>
+              <div><strong>${confirmationCopy.order}:</strong> ${learnedLanguagesList || confirmationCopy.none}</div>
+              <div><strong>${confirmationCopy.japaneseOrder}:</strong> ${languageMetrics.japaneseLanguageOrder || confirmationCopy.none}</div>
+              <div><strong>${confirmationCopy.total}:</strong> ${languageMetrics.totalLanguagesLearned || confirmationCopy.none}</div>
+              <h3>3. ${confirmationCopy.other}</h3>
+              <div><strong>${confirmationCopy.phonology}:</strong> ${state.phonologyTheoryExperience}</div>
+              <div><strong>${confirmationCopy.pronunciation}:</strong> ${state.pronExperience}</div>
+              <div><strong>${confirmationCopy.institution}:</strong> ${institution || confirmationCopy.none}</div>
+              <div><strong>${confirmationCopy.email}:</strong> ${email || confirmationCopy.none}</div>
             </div>
             <div style="margin-top:18px; color:#ccc; font-size:0.95em; line-height:1.7;">
-              内容に問題がなければ次へ進んでください。ここでは戻れますが、次の画面からは戻れません。
-              <br>
-              If everything looks correct, proceed to the listening test. You can return only from this screen.
+              ${confirmationCopy.note}
             </div>
             </div>
             <div class="wizard-nav">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">Back / 戻る</button>
-              <button type="button" id="wizard_confirm_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">Proceed to listening test / 音声テストへ進む</button>
+              <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.back}</button>
+              <button type="button" id="wizard_confirm_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.next}</button>
             </div>
             </div>
           </div>
@@ -3247,7 +3297,7 @@
       const copy = languageCopy[instructionLanguage];
       return `
         <div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;">
-          <p class="audio-task-kicker">Before you begin</p>
+          <p class="audio-task-kicker">${copy.beforeBegin}</p>
           <h2 style="text-align:center;">${copy.welcome}</h2>
           <p>${copy.instruction1}</p>
           <p>${copy.instruction2}</p>
