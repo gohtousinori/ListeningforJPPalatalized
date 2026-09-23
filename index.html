@@ -162,9 +162,9 @@
     }
 
     .jspsych-btn {
-      background: linear-gradient(180deg, #2a4f80, #1b3457);
+      background: rgba(55, 101, 157, 0.34);
       color: #f7fbff;
-      border: 1px solid #93b7e4;
+      border: 1px solid rgba(168, 204, 245, 0.78);
       border-radius: 8px;
       font-weight: 600;
       padding: 9px 18px;
@@ -174,8 +174,45 @@
 
     .jspsych-btn:hover {
       transform: translateY(-1px);
+      background: rgba(79, 139, 207, 0.5);
+      box-shadow: 0 12px 24px rgba(7, 20, 40, 0.42);
+    }
+
+    .jspsych-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 12px rgba(7, 20, 40, 0.32);
+    }
+
+    .jspsych-btn:disabled,
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      transform: none;
+    }
+
+    button,
+    select,
+    input,
+    textarea {
+      touch-action: manipulation;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    .jspsych-btn.answer-choice {
+      background: linear-gradient(180deg, #2a4f80, #1b3457);
+      border-color: #93b7e4;
+    }
+
+    .jspsych-btn.answer-choice:hover {
       background: linear-gradient(180deg, #316094, #224169);
-      box-shadow: 0 12px 24px rgba(7, 20, 40, 0.52);
     }
 
     .audio-task {
@@ -236,6 +273,11 @@
     .language-selection {
       max-width: 520px;
       margin: 0 auto;
+      padding: clamp(20px, 2.2vw, 32px) clamp(16px, 2.4vw, 30px);
+      border: 1px solid rgba(181, 206, 240, 0.42);
+      border-radius: 10px;
+      background: rgba(10, 25, 45, 0.86);
+      box-shadow: 0 16px 34px rgba(1, 7, 18, 0.32);
       text-align: center;
     }
 
@@ -320,6 +362,47 @@
       color: #b9d7ff;
     }
 
+    .instruction-screen {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: clamp(20px, 2.2vw, 32px) clamp(16px, 2.4vw, 30px);
+      border: 1px solid rgba(181, 206, 240, 0.42);
+      border-radius: 10px;
+      background: rgba(10, 25, 45, 0.86);
+      box-shadow: 0 16px 34px rgba(1, 7, 18, 0.32);
+      text-align: center;
+    }
+
+    .instruction-screen p {
+      margin: 14px 0;
+    }
+
+    .instruction-screen .instruction-emphasis {
+      margin-top: 22px;
+      padding: 12px 14px;
+      border-left: 3px solid #ffcc00;
+      background: rgba(255, 204, 0, 0.14);
+      color: #ffdf75;
+      text-align: center;
+    }
+
+    .stage-intro {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: clamp(20px, 2.2vw, 32px) clamp(16px, 2.4vw, 30px);
+      border: 1px solid rgba(181, 206, 240, 0.42);
+      border-radius: 10px;
+      background: rgba(10, 25, 45, 0.86);
+      box-shadow: 0 16px 34px rgba(1, 7, 18, 0.32);
+      text-align: center;
+    }
+
+    .stage-intro p:not(.audio-task-kicker) {
+      margin: 14px 0 0;
+      color: var(--muted-ink);
+      line-height: 1.7 !important;
+    }
+
     .consent-actions {
       display: flex;
       justify-content: center;
@@ -334,12 +417,12 @@
     }
 
     .consent-actions .consent-accept {
-      background: linear-gradient(180deg, #287b62, #1c5b4a);
-      border-color: #8de0be;
+      background: rgba(40, 123, 98, 0.38);
+      border-color: rgba(141, 224, 190, 0.86);
     }
 
     .consent-actions .consent-decline {
-      background: rgba(91, 42, 55, 0.8);
+      background: rgba(91, 42, 55, 0.38);
       border-color: rgba(240, 157, 174, 0.78);
       color: #ffe8ed;
     }
@@ -421,12 +504,12 @@
     button:not(.jspsych-btn) {
       color: #f7fbff !important;
       border-color: rgba(150, 184, 226, 0.82) !important;
-      background: linear-gradient(180deg, rgba(39, 70, 109, 0.92), rgba(26, 47, 76, 0.92)) !important;
-      box-shadow: 0 8px 18px rgba(6, 17, 34, 0.34);
+      background: rgba(55, 101, 157, 0.32) !important;
+      box-shadow: 0 8px 18px rgba(6, 17, 34, 0.28);
     }
 
     button:not(.jspsych-btn):hover {
-      background: linear-gradient(180deg, rgba(51, 89, 137, 0.94), rgba(32, 59, 93, 0.94)) !important;
+      background: rgba(79, 139, 207, 0.48) !important;
     }
 
     .jspsych-btn:focus-visible,
@@ -3344,14 +3427,14 @@
     stimulus: function() {
       const copy = languageCopy[instructionLanguage];
       return `
-        <div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;">
+        <div class="instruction-screen">
           <p class="audio-task-kicker">${copy.beforeBegin}</p>
           <h2 style="text-align:center;">${copy.welcome}</h2>
           <p>${copy.instruction1}</p>
           <p>${copy.instruction2}</p>
           <p>${copy.instruction3}</p>
           <p>${copy.instruction4}</p>
-          <p style="background:rgba(255,204,0,0.1); border-left:3px solid #ffcc00; padding:10px 14px; margin-top:18px; color:#ffdf75;">${copy.instruction5}</p>
+          <p class="instruction-emphasis">${copy.instruction5}</p>
         </div>
       `;
     },
@@ -3668,6 +3751,8 @@
           return;
         }
 
+        button.classList.add('answer-choice');
+
         choiceWrapper.style.margin = '0';
         choiceWrapper.style.width = '100%';
 
@@ -3832,7 +3917,7 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
       const copy = languageCopy[instructionLanguage];
-      return `<div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;"><p class="audio-task-kicker">${copy.practiceTitle}</p><h2 style="text-align:center;">${copy.practiceTitle}</h2><p>${copy.practiceText}</p></div>`;
+      return `<div class="stage-intro"><p class="audio-task-kicker">${copy.practiceTitle}</p><h2>${copy.practiceTitle}</h2><p>${copy.practiceText}</p></div>`;
     },
     choices: function() { return [instructionLanguage === 'en' ? 'Begin practice' : instructionLanguage === 'th' ? 'เริ่มข้อทดลอง' : '練習を開始']; },
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
@@ -3848,7 +3933,7 @@
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
       const copy = languageCopy[instructionLanguage];
-      return `<div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;"><p class="audio-task-kicker">${copy.mainTitle}</p><h2 style="text-align:center;">${copy.mainTitle}</h2><p>${copy.mainText}</p></div>`;
+      return `<div class="stage-intro"><p class="audio-task-kicker">${copy.mainTitle}</p><h2>${copy.mainTitle}</h2><p>${copy.mainText}</p></div>`;
     },
     choices: function() { return [instructionLanguage === 'en' ? 'Begin main test' : instructionLanguage === 'th' ? 'เริ่มการทดสอบจริง' : '本番テストを開始']; },
     button_html: '<button class="jspsych-btn" style="min-width: 180px; padding: 10px 20px; font-size: 16px;">%choice%</button>'
