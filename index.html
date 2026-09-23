@@ -2892,10 +2892,18 @@
         return selectHtml;
       };
 
+      const buildLanguageSearchOptions = () => {
+        return languageOptions
+          .slice()
+          .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
+          .map(item => `<option value="${item.replace(/"/g, '&quot;')}"></option>`)
+          .join('');
+      };
+
       const buildYearOptions = () => {
         let options = `<option value="">${languageCopy[instructionLanguage].select}</option>`;
         for (let i = 0; i <= 50; i++) {
-          const label = instructionLanguage === 'en' ? (i === 1 ? 'year' : 'years') : instructionLanguage === 'th' ? 'ปี' : '年';
+          const label = instructionLanguage === 'en' ? (i <= 1 ? 'year' : 'years') : instructionLanguage === 'th' ? 'ปี' : '年';
           options += `<option value="${i}">${i} ${label}</option>`;
         }
         return options;
@@ -2904,7 +2912,7 @@
       const buildMonthOptions = () => {
         let options = `<option value="">${languageCopy[instructionLanguage].select}</option>`;
         for (let i = 0; i <= 12; i++) {
-          const label = instructionLanguage === 'en' ? (i === 1 ? 'month' : 'months') : instructionLanguage === 'th' ? 'เดือน' : 'か月';
+          const label = instructionLanguage === 'en' ? (i <= 1 ? 'month' : 'months') : instructionLanguage === 'th' ? 'เดือน' : 'か月';
           options += `<option value="${i}">${i} ${label}</option>`;
         }
         const uncertain = instructionLanguage === 'en' ? ['Not sure (about 0-6 months)', 'Not sure (about 6-12 months)'] : instructionLanguage === 'th' ? ['ไม่แน่ใจ (ประมาณ 0-6 เดือน)', 'ไม่แน่ใจ (ประมาณ 6-12 เดือน)'] : ['不確定（約0～6か月）', '不確定（約6～12か月）'];
@@ -3077,7 +3085,8 @@
               <div class="wizard-help-text">${wizardUiCopy.languageOrderHelp}</div>
               <div class="wizard-help-text">${wizardUiCopy.standardized}</div>
               <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <select id="wizard_language_picker" style="min-width:300px; max-width:100%;">${buildSelectOptions()}</select>
+                <input id="wizard_language_picker" type="search" list="wizard_language_suggestions" autocomplete="off" placeholder="${instructionLanguage === 'en' ? 'Type to search for a language' : instructionLanguage === 'th' ? 'พิมพ์เพื่อค้นหาภาษา' : '言語を入力して検索'}" style="min-width:300px; max-width:100%;" />
+                <datalist id="wizard_language_suggestions">${buildLanguageSearchOptions()}</datalist>
                 <button type="button" id="wizard_add_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">${wizardUiCopy.add}</button>
               </div>
               <div class="wizard-help-text">${wizardUiCopy.currentOrder}</div>
