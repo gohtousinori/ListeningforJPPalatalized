@@ -226,6 +226,30 @@
       text-align: left;
     }
 
+    .language-selection {
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .language-selection h2 {
+      margin-bottom: 10px;
+    }
+
+    .language-selection p:not(.audio-task-kicker) {
+      color: var(--muted-ink);
+    }
+
+    .language-selection label {
+      display: block;
+      margin: 24px 0 8px;
+      font-weight: 600;
+    }
+
+    .language-selection select {
+      width: 100%;
+    }
+
     @media (max-width: 760px) {
       .audio-task {
         padding: 4px 0;
@@ -1449,6 +1473,106 @@
   // ========================================
   // Step 2: Start page - research title and privacy notice.
   // ========================================
+  let instructionLanguage = 'en';
+
+  const languageCopy = {
+    en: {
+      languageTitle: 'Choose your language',
+      languageHint: 'This controls the instructions and guidance shown during the study.',
+      continue: 'Continue',
+      title: 'Japanese Speech Perception Study',
+      noticeTitle: 'Important notice',
+      notice: 'Please open this survey directly in Google Chrome. Do not use an in-app browser such as LINE or Facebook. If audio does not play, use a desktop or laptop computer or contact the researcher.',
+      consent: 'I consent',
+      decline: 'I do not consent',
+      welcome: 'Welcome',
+      instruction1: 'This study contains 44 Japanese speech perception items.',
+      instruction2: 'Each item plays one sound once. After playback, choose the answer that best matches what you heard.',
+      instruction3: 'You will complete 2 practice items first. Practice responses are not included in the analysis.',
+      instruction4: 'The answer choices are shuffled. You may choose the same answer more than once.',
+      instruction5: 'Respond naturally and promptly. There is no time limit.',
+      begin: 'Begin'
+    },
+    th: {
+      languageTitle: 'เลือกภาษาที่แสดง',
+      languageHint: 'ภาษานี้จะใช้แสดงวิธีทำและคำแนะนำระหว่างการทดสอบ',
+      continue: 'ดำเนินการต่อ',
+      title: 'แบบทดสอบการรับรู้เสียงภาษาญี่ปุ่น',
+      noticeTitle: 'ข้อควรทราบ',
+      notice: 'กรุณาเปิดแบบทดสอบนี้โดยตรงด้วย Google Chrome หลีกเลี่ยงเบราว์เซอร์ในแอป เช่น LINE หรือ Facebook หากเสียงไม่เล่น ให้ใช้คอมพิวเตอร์หรือโน้ตบุ๊ก หรือติดต่อผู้วิจัย',
+      consent: 'ยินยอมเข้าร่วม',
+      decline: 'ไม่ยินยอม',
+      welcome: 'คำแนะนำการทดสอบ',
+      instruction1: 'แบบทดสอบนี้มีทั้งหมด 44 ข้อ เป็นการฟังเสียงภาษาญี่ปุ่น',
+      instruction2: 'แต่ละข้อจะเล่นเสียง 1 ครั้ง เมื่อเสียงจบแล้ว ให้เลือกคำตอบที่ตรงกับเสียงที่ได้ยินมากที่สุด',
+      instruction3: 'ก่อนเริ่มจริงจะมีข้อทดลอง 2 ข้อ ซึ่งไม่นำไปวิเคราะห์ผล',
+      instruction4: 'ตัวเลือกคำตอบจะสลับลำดับ และสามารถเลือกคำตอบเดิมซ้ำได้',
+      instruction5: 'ตอบตามที่ได้ยินอย่างเป็นธรรมชาติและรวดเร็ว ไม่มีการจำกัดเวลา',
+      begin: 'เริ่มทำแบบทดสอบ'
+    },
+    ja: {
+      languageTitle: '説明の言語を選択してください',
+      languageHint: 'この言語でテスト方法と案内を表示します。',
+      continue: '続行',
+      title: '日本語音声聴覚識別調査',
+      noticeTitle: '重要なお知らせ',
+      notice: 'この調査はGoogle Chromeで直接開いてください。LINEやFacebookなどのアプリ内ブラウザは使用しないでください。音声が再生されない場合は、パソコンでアクセスするか研究者にご連絡ください。',
+      consent: '同意する',
+      decline: '同意しない',
+      welcome: 'テストの説明',
+      instruction1: 'この調査は日本語音声の聴覚識別テストで、全部で44問あります。',
+      instruction2: '各問題では音声が1回再生されます。再生後、聞こえた音に最も近い答えを選択してください。',
+      instruction3: '本番の前に練習問題を2問行います。練習の回答は分析対象になりません。',
+      instruction4: '選択肢の順番は入れ替わります。同じ答えを複数回選択しても構いません。',
+      instruction5: '時間をかけすぎず、自然にお答えください。時間制限はありません。',
+      begin: '開始'
+    }
+  };
+
+  const languageSelection = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function() {
+      const copy = languageCopy[instructionLanguage];
+      return `
+        <div class="language-selection">
+          <p class="audio-task-kicker">Study setup / 調査設定</p>
+          <h2 id="language-selection-title">${copy.languageTitle}</h2>
+          <p id="language-selection-hint">${copy.languageHint}</p>
+          <label for="instruction-language">Language / 言語</label>
+          <select id="instruction-language" aria-label="Instruction language">
+            <option value="en">English</option>
+            <option value="th">ไทย</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
+      `;
+    },
+    choices: function() {
+      return [languageCopy[instructionLanguage].continue];
+    },
+    button_html: '<button class="jspsych-btn" style="min-width:180px;">%choice%</button>',
+    on_load: function() {
+      const select = document.getElementById('instruction-language');
+      if (select) {
+        select.value = instructionLanguage;
+        select.addEventListener('change', function updateLanguageSelection() {
+          instructionLanguage = select.value;
+          const copy = languageCopy[instructionLanguage];
+          const title = document.getElementById('language-selection-title');
+          const hint = document.getElementById('language-selection-hint');
+          if (title) title.textContent = copy.languageTitle;
+          if (hint) hint.textContent = copy.languageHint;
+          const button = document.querySelector('#jspsych-html-button-response-btngroup button');
+          if (button) button.textContent = copy.continue;
+        });
+      }
+    },
+    data: { task: 'instruction_language' },
+    on_finish: function(data) {
+      data.instruction_language = instructionLanguage;
+    }
+  };
+
   const titleAndNotice = {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
@@ -1480,9 +1604,27 @@
         </div>
       </div>
     `,
-    choices: ['同意する / I consent', '同意しません / I do not consent'],
+    choices: function() {
+      const copy = languageCopy[instructionLanguage];
+      return [copy.consent, copy.decline];
+    },
     button_html: '<button class="jspsych-btn" style="min-width: 150px; margin: 12px;">%choice%</button>',
     on_load: function() {
+      const copy = languageCopy[instructionLanguage];
+      const stimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
+      if (stimulusEl) {
+        stimulusEl.innerHTML = `
+          <div style="text-align:center; padding:30px 20px;">
+            <h1 style="font-size:clamp(22px, 2vw + 16px, 32px); line-height:1.35; margin:0 0 20px;">${copy.title}</h1>
+            <div style="max-width:720px; margin:0 auto; background:rgba(12,26,46,0.72); color:#fff; padding:20px; border:1px solid rgba(181,206,240,0.36); border-radius:8px; text-align:left; line-height:1.7;">
+              <strong>${copy.noticeTitle}</strong>
+              <p style="margin:10px 0 0;">${copy.notice}</p>
+              <p style="margin:16px 0 0;">${instructionLanguage === 'en' ? 'Participation is voluntary. You may stop at any time. The data will be used for academic research and reported in aggregate.' : instructionLanguage === 'th' ? 'การเข้าร่วมเป็นความสมัครใจ คุณสามารถหยุดได้ทุกเมื่อ ข้อมูลจะใช้เพื่อการวิจัยและรายงานในภาพรวม' : '参加は自由意思です。いつでも中止できます。データは学術研究に使用し、集計した形で報告します。'}</p>
+              <p style="margin:16px 0 0;"><strong>Contact:</strong><br>u548378a@ecs.osaka-u.ac.jp</p>
+            </div>
+          </div>
+        `;
+      }
       const shouldUsePinnedConsentLayout = window.matchMedia && (
         window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches ||
         window.matchMedia('(max-width: 760px)').matches
@@ -1492,9 +1634,9 @@
       }
 
       const contentCard = document.getElementById('jspsych-content');
-      const stimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
+      const currentStimulusEl = document.getElementById('jspsych-html-button-response-stimulus');
       const buttonGroup = document.getElementById('jspsych-html-button-response-btngroup');
-      if (!contentCard || !stimulusEl || !buttonGroup) {
+      if (!contentCard || !currentStimulusEl || !buttonGroup) {
         return;
       }
 
@@ -1504,11 +1646,11 @@
         ? 'calc(100vh - var(--brand-header-space) - 18px - env(safe-area-inset-bottom))'
         : 'calc(100vh - var(--brand-header-space) - var(--brand-footer-space) - 24px)';
 
-      stimulusEl.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
+      currentStimulusEl.style.maxHeight = window.matchMedia('(max-width: 760px)').matches
         ? 'calc(100vh - var(--brand-header-space) - 120px - env(safe-area-inset-bottom))'
         : 'min(62vh, 620px)';
-      stimulusEl.style.overflowY = 'auto';
-      stimulusEl.style.paddingRight = '6px';
+      currentStimulusEl.style.overflowY = 'auto';
+      currentStimulusEl.style.paddingRight = '6px';
 
       buttonGroup.style.display = 'grid';
       buttonGroup.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
@@ -2770,34 +2912,23 @@
   // ========================================
   const instructions = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <div style="text-align: left; max-width: 800px; margin: 0 auto; color: #fff;">
-        <h2 style="text-align: center;">ようこそ / Welcome</h2>
-        
-        <h3 style="color: #aaa; margin-top: 25px;">【English】</h3>
-        <p>This study consists of a Japanese speech perception test comprising <strong>44 items</strong>.</p>
-        <p>In each item, a single audio stimulus will be played once. Please select the option that most closely matches what you heard from the five available choices.</p>
-        <p>Prior to the main session, you will complete <strong>2 practice items</strong>. Practice responses are not included in scoring.</p>
-        <p>The order of response options is randomized for each item.</p>
-        <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
-          <strong>Important:</strong> You may select the same option in multiple items when you perceive the same sound.<br>
-          <span style="color: #ccc; font-size: 0.92em;">For example, if you select "sha" in Item 1 and Item 2 also sounds like "sha", selecting "sha" again is appropriate.</span>
-        </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>Please respond naturally and as promptly as possible</strong> without over-deliberation (there is no time limit).</p>
-        
-        <h3 style="color: #aaa; margin-top: 25px;">【日本語】</h3>
-        <p>本調査は日本語音声の聴覚識別テストです。全部で <strong>44 問</strong>あります。</p>
-        <p>各項目では音声が1回再生されます。聞こえた音に最も近い選択肢を、5つの中から1つ選択してください。</p>
-        <p>本番開始前に <strong>2 問の練習問題</strong>があります。練習問題は採点対象ではありませんが、本番と同様にご回答ください。</p>
-        <p>各項目における選択肢の順序は、毎回ランダムに入れ替わります。</p>
-        <p style="background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; padding: 10px 14px; margin-top: 12px;">
-          <strong>重要:</strong> 複数の問題で同じ選択肢を繰り返し選択することができます。<br>
-          <span style="color: #ccc; font-size: 0.92em;">例えば、問1で「sha」と答えた場合でも、問2でも「sha」に聞こえた場合は、同じく「sha」を選んでいただいても構いません。</span>
-        </p>
-        <p style="color: #ffcc00; margin-top: 15px;"><strong>できるだけ自然な速度で、直感的にご回答ください</strong>（時間制限はありません）</p>
-      </div>
-    `,
-    choices: ['開始 / Begin'],
+    stimulus: function() {
+      const copy = languageCopy[instructionLanguage];
+      return `
+        <div style="text-align:left; max-width:760px; margin:0 auto; color:#fff;">
+          <p class="audio-task-kicker">Before you begin</p>
+          <h2 style="text-align:center;">${copy.welcome}</h2>
+          <p>${copy.instruction1}</p>
+          <p>${copy.instruction2}</p>
+          <p>${copy.instruction3}</p>
+          <p>${copy.instruction4}</p>
+          <p style="background:rgba(255,204,0,0.1); border-left:3px solid #ffcc00; padding:10px 14px; margin-top:18px; color:#ffdf75;">${copy.instruction5}</p>
+        </div>
+      `;
+    },
+    choices: function() {
+      return [languageCopy[instructionLanguage].begin];
+    },
     button_html: '<button class="jspsych-btn" style="min-width: 150px; padding: 10px 20px; font-size: 16px;">%choice%</button>',
     on_load: function() {
       const isDesktopLandscape = window.matchMedia && window.matchMedia('(min-width: 900px) and (orientation: landscape)').matches;
@@ -2840,6 +2971,7 @@
       });
     }
   };
+  timeline.push(languageSelection);
   timeline.push(titleAndNotice);
   
   const conditionalConsent = {
@@ -2924,27 +3056,29 @@
     stimulus: function() {
       const stim = jsPsych.timelineVariable('stimulus');
       const filename = stimulusToRomaji[stim];
+      const copy = languageCopy[instructionLanguage];
+      const audioText = {
+        en: ['Listening task', 'Listen and choose', 'Press once to hear the sound. Answer choices will appear after playback finishes.', 'Press the button to hear the sound', 'If you cannot hear the sound', 'Please check your device settings, switch to Chrome or Firefox, or use a computer.'],
+        th: ['การฟังเสียง', 'ฟังแล้วเลือกคำตอบ', 'กดปุ่มหนึ่งครั้งเพื่อฟังเสียง เมื่อเสียงจบแล้วตัวเลือกคำตอบจะปรากฏขึ้น', 'กดปุ่มเพื่อฟังเสียง', 'หากไม่ได้ยินเสียง', 'กรุณาตรวจสอบอุปกรณ์ เปลี่ยนเป็น Chrome หรือ Firefox หรือใช้คอมพิวเตอร์'],
+        ja: ['聴取課題', '聞いて選ぶ', 'ボタンを1回押して音声を聞いてください。再生終了後に回答の選択肢が表示されます。', 'ボタンを押して音声を聞いてください', '音声が聞こえない場合', '機器を確認し、ChromeまたはFirefoxに変更するか、パソコンを使用してください。']
+      }[instructionLanguage];
       return `
         <div class="audio-task">
-          <p class="audio-task-kicker">Listening task / 聴取課題</p>
-          <h2 class="audio-task-title">Listen and choose / 聞いて選ぶ</h2>
-          <p class="audio-task-instructions">
-            Press once to hear the sound. Answer choices will appear after playback finishes.<br>
-            ボタンを1回押して音声を聞いてください。再生終了後に回答の選択肢が表示されます。
-          </p>
+          <p class="audio-task-kicker">${audioText[0]}</p>
+          <h2 class="audio-task-title">${audioText[1]}</h2>
+          <p class="audio-task-instructions">${audioText[2]}</p>
           <button id="play-stimulus" type="button" class="jspsych-btn audio-task-action">
-            Play audio / 音声を再生
+            ${copy.begin === 'เริ่มทำแบบทดสอบ' ? 'เล่นเสียง' : instructionLanguage === 'ja' ? '音声を再生' : 'Play audio'}
           </button>
           <audio id="stim-audio" preload="auto">
             <source src="audio/${filename}.mp3" type="audio/mpeg">
           </audio>
           <p id="audio-status" class="audio-task-status" role="status" aria-live="polite">
-            Press the button to hear the sound / ボタンを押して音声を再生してください
+            ${audioText[3]}
           </p>
           <div class="audio-task-help">
-            <strong>If you cannot hear the sound / 音声が聞こえない場合</strong><br>
-            If you cannot hear the sound, please check your device settings, or switch your browser to Chrome/Firefox. If you are on a mobile phone and the audio still does not play, please take the test on a computer.<br>
-            音声が聞こえない場合は、お使いの機器をご確認いただくか、ブラウザをChromeまたはFirefoxに変更してください。スマートフォンでも音声が再生されない場合は、パソコンでテストを行ってください。
+            <strong>${audioText[4]}</strong><br>
+            ${audioText[5]}
           </div>
         </div>
       `;
@@ -2978,7 +3112,12 @@
 
       audioEl.onerror = function() {
         playButton.disabled = false;
-        setStatus('Audio could not be loaded. Press the button to try again. / 音声を読み込めません。もう一度押してください。', true);
+        const errorMessage = {
+          en: 'Audio could not be loaded. Press the button to try again.',
+          th: 'ไม่สามารถโหลดเสียงได้ กรุณากดปุ่มเพื่อลองอีกครั้ง',
+          ja: '音声を読み込めません。ボタンを押してもう一度お試しください。'
+        }[instructionLanguage];
+        setStatus(errorMessage, true);
         console.warn('Audio failed to load:', audioEl.currentSrc, audioEl.error);
       };
 
@@ -2988,13 +3127,18 @@
         }
 
         playButton.disabled = true;
-        setStatus('Playing... / 再生中…');
+        setStatus({ en: 'Playing...', th: 'กำลังเล่นเสียง...', ja: '再生中…' }[instructionLanguage]);
 
         const playPromise = audioEl.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch(function(error) {
             playButton.disabled = false;
-            setStatus('Playback was blocked. Press the button to try again. / 再生がブロックされました。もう一度押してください。', true);
+            const errorMessage = {
+              en: 'Playback was blocked. Press the button to try again.',
+              th: 'เบราว์เซอร์บล็อกการเล่นเสียง กรุณากดปุ่มเพื่อลองอีกครั้ง',
+              ja: '再生がブロックされました。ボタンを押してもう一度お試しください。'
+            }[instructionLanguage];
+            setStatus(errorMessage, true);
             console.warn('Audio playback failed:', error);
           });
         }
@@ -3004,7 +3148,14 @@
 
   const responseTrial = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p style="font-size:16px;">Please select the option that most closely matches the sound you heard.<br><span style="color:#aaa; font-size:14px;">聞こえた音に最も近い選択肢を選択してください</span></p>',
+    stimulus: function() {
+      const responseText = {
+        en: 'Select the answer that best matches the sound you heard.',
+        th: 'เลือกคำตอบที่ตรงกับเสียงที่คุณได้ยินมากที่สุด',
+        ja: '聞こえた音に最も近い答えを選択してください。'
+      }[instructionLanguage];
+      return `<p style="font-size:16px;">${responseText}</p>`;
+    },
     choices: jsPsych.timelineVariable('choices'),
     button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
     on_load: function() {
@@ -3032,16 +3183,37 @@
       otherInlineContainer.style.maxWidth = '760px';
       otherInlineContainer.style.marginLeft = 'auto';
       otherInlineContainer.style.marginRight = 'auto';
+      const otherCopy = {
+        en: {
+          prompt: 'Please enter the sound you heard in romaji.',
+          example: 'e.g., di, ti, fi, ri',
+          placeholder: 'Enter romaji',
+          submit: 'Submit response',
+          required: 'Please enter a response before submitting.'
+        },
+        th: {
+          prompt: 'กรุณาพิมพ์เสียงที่ได้ยินเป็นอักษรโรมาจิ',
+          example: 'เช่น di, ti, fi, ri',
+          placeholder: 'พิมพ์อักษรโรมาจิ',
+          submit: 'ส่งคำตอบ',
+          required: 'กรุณาพิมพ์คำตอบก่อนส่ง'
+        },
+        ja: {
+          prompt: '聞こえた音をローマ字で入力してください。',
+          example: '例：di、ti、fi、ri',
+          placeholder: 'ローマ字を入力',
+          submit: '回答を送信',
+          required: '回答を入力してから送信してください。'
+        }
+      }[instructionLanguage];
       otherInlineContainer.innerHTML = `
         <div style="margin-bottom: 10px; line-height: 1.6; text-align: left;">
-          <strong>Please enter the sound you heard in romaji.</strong><br>
-          <span style="display:block; margin-top:6px;"><strong>聞こえた音をローマ字で入力してください。</strong></span>
-          <span style="display:block; margin-top:8px; color:#d9e6ff; font-size:0.95em;">e.g., di, ti, fi, ri</span>
-          <span style="display:block; color:#d9e6ff; font-size:0.95em;">例：di, ti, fi, ri など</span>
+          <strong>${otherCopy.prompt}</strong><br>
+          <span style="display:block; margin-top:8px; color:#d9e6ff; font-size:0.95em;">${otherCopy.example}</span>
         </div>
-        <input id="inline_other_input" type="text" placeholder="Enter romaji / ローマ字を入力" style="width:100%; max-width:100%;" aria-label="Other response in romaji" />
-        <button type="button" id="inline_other_submit" class="jspsych-btn" style="margin-top:10px; width:100%;">Submit response / この内容で送信</button>
-        <div id="inline_other_error" style="display:none; margin-top:8px; color:#ff8b8b; text-align:left;">Please enter a response before submitting. / 入力してから送信してください。</div>
+        <input id="inline_other_input" type="text" placeholder="${otherCopy.placeholder}" style="width:100%; max-width:100%;" aria-label="${otherCopy.prompt}" />
+        <button type="button" id="inline_other_submit" class="jspsych-btn" style="margin-top:10px; width:100%;">${otherCopy.submit}</button>
+        <div id="inline_other_error" style="display:none; margin-top:8px; color:#ff8b8b; text-align:left;">${otherCopy.required}</div>
       `;
 
       buttonGroup.insertAdjacentElement('afterend', otherInlineContainer);
@@ -3167,14 +3339,29 @@
 
   const otherTextTrial = {
     type: jsPsychSurveyText,
-    questions: [
-      {
-        prompt: '<div style="margin-bottom: 15px;"><strong>Please enter the sound you heard in romaji below.</strong><br/><strong style="display:block; margin-top:8px;">下記に聞こえた音をローマ字で入力してください</strong><br/><span style="color: #aaa; font-size: 14px;">e.g., di, ti, fi, ri</span><br/><span style="color: #aaa; font-size: 14px;">例：di, ti, fi, ri など</span><br/><br/><span style="color: #ffcc00; font-size: 0.9em;"><strong>If the perceived sound differs from the provided options:</strong><br/>If you hear "si", enter <strong>si</strong>.<br/>If you hear "ti", enter <strong>ti</strong>.<br/>If you hear "fi", enter <strong>fi</strong>.<br/><br/>補足：<br/>想定された選択肢と異なる音に聞こえた場合は、si・ti・fi などをご入力ください。</span></div>',
+    questions: [],
+    on_start: function(trial) {
+      const copy = {
+        en: {
+          prompt: 'Please enter the sound you heard in romaji.<br><span style="color:#aaa;">If it differs from the options, enter what you heard (e.g., si, ti, fi).</span>',
+          placeholder: 'Enter romaji'
+        },
+        th: {
+          prompt: 'กรุณาพิมพ์เสียงที่ได้ยินเป็นอักษรโรมาจิ<br><span style="color:#aaa;">หากไม่ตรงกับตัวเลือก ให้พิมพ์เสียงที่ได้ยิน เช่น si, ti, fi</span>',
+          placeholder: 'พิมพ์อักษรโรมาจิ'
+        },
+        ja: {
+          prompt: '聞こえた音をローマ字で入力してください。<br><span style="color:#aaa;">選択肢と異なる場合は、聞こえた音（si、ti、fiなど）を入力してください。</span>',
+          placeholder: 'ローマ字を入力'
+        }
+      }[instructionLanguage];
+      trial.questions = [{
+        prompt: `<div style="margin-bottom:15px;"><strong>${copy.prompt}</strong></div>`,
         name: 'other_sound',
-        placeholder: 'Enter romaji / ローマ字を入力',
+        placeholder: copy.placeholder,
         required: true
-      }
-    ],
+      }];
+    },
     data: {
       task: 'other_text'
     },
