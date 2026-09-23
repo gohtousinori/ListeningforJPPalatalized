@@ -2854,25 +2854,69 @@
       const stim = jsPsych.timelineVariable('stimulus');
       const filename = stimulusToRomaji[stim];
       return `
-        <audio id="stim-audio" autoplay>
-          <source src="audio/${filename}.mp3" type="audio/mpeg">
-        </audio>
-        <div style="font-size: 64px; margin: 24px 0;">🔊</div>
+        <div style="text-align:center;">
+          <button id="play-stimulus" type="button" class="jspsych-btn" style="min-width:220px; margin:18px 8px 8px;">
+            Play audio / 音声を再生
+          </button>
+          <audio id="stim-audio" preload="auto">
+            <source src="audio/${filename}.mp3" type="audio/mpeg">
+          </audio>
+          <div id="audio-status" role="status" aria-live="polite" style="min-height:1.5em; color:#bfd0e7; font-size:0.9em;">
+            Press the button to hear the sound / ボタンを押して音声を再生してください
+          </div>
+        </div>
       `;
     },
     choices: "NO_KEYS",
     trial_duration: null,
     on_load: function() {
       const audioEl = document.getElementById('stim-audio');
-      if (audioEl) {
-        audioEl.onended = function() {
-          jsPsych.finishTrial();
-        };
-        audioEl.onerror = function() {
-          console.warn('Audio failed to load:', audioEl.currentSrc);
-          setTimeout(() => jsPsych.finishTrial(), 1000);
-        };
+      const playButton = document.getElementById('play-stimulus');
+      const statusEl = document.getElementById('audio-status');
+      let trialFinished = false;
+
+      if (!audioEl || !playButton) {
+        return;
       }
+
+      const setStatus = (message, isError = false) => {
+        if (statusEl) {
+          statusEl.textContent = message;
+          statusEl.style.color = isError ? '#ff8b8b' : '#bfd0e7';
+        }
+      };
+
+      audioEl.onended = function() {
+        if (trialFinished) {
+          return;
+        }
+        trialFinished = true;
+        jsPsych.finishTrial();
+      };
+
+      audioEl.onerror = function() {
+        playButton.disabled = false;
+        setStatus('Audio could not be loaded. Press the button to try again. / 音声を読み込めません。もう一度押してください。', true);
+        console.warn('Audio failed to load:', audioEl.currentSrc, audioEl.error);
+      };
+
+      playButton.addEventListener('click', function() {
+        if (playButton.disabled || trialFinished) {
+          return;
+        }
+
+        playButton.disabled = true;
+        setStatus('Playing... / 再生中…');
+
+        const playPromise = audioEl.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function(error) {
+            playButton.disabled = false;
+            setStatus('Playback was blocked. Press the button to try again. / 再生がブロックされました。もう一度押してください。', true);
+            console.warn('Audio playback failed:', error);
+          });
+        }
+      });
     }
   };
 
