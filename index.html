@@ -535,6 +535,7 @@
     }
 
     select,
+    input[type="search"],
     input[type="text"],
     input[type="email"],
     textarea {
@@ -555,6 +556,7 @@
     }
 
     #jspsych-content select,
+    #jspsych-content input[type="search"],
     #jspsych-content input[type="text"],
     #jspsych-content input[type="email"],
     #jspsych-content textarea {
@@ -565,6 +567,7 @@
     }
 
     #jspsych-content input::placeholder,
+    #jspsych-content input[type="search"]::placeholder,
     #jspsych-content textarea::placeholder {
       font-size: var(--ui-font-small);
     }
@@ -837,6 +840,7 @@
       }
 
       #jspsych-content select,
+        #jspsych-content input[type="search"],
       #jspsych-content textarea {
         width: 100% !important;
         max-width: 100% !important;
@@ -3085,10 +3089,11 @@
               <div class="wizard-help-text">${wizardUiCopy.languageOrderHelp}</div>
               <div class="wizard-help-text">${wizardUiCopy.standardized}</div>
               <div style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input id="wizard_language_picker" type="search" list="wizard_language_suggestions" autocomplete="off" placeholder="${instructionLanguage === 'en' ? 'Type to search for a language' : instructionLanguage === 'th' ? 'พิมพ์เพื่อค้นหาภาษา' : '言語を入力して検索'}" style="min-width:300px; max-width:100%;" />
+                <input id="wizard_language_picker" type="search" list="wizard_language_suggestions" autocomplete="off" aria-describedby="wizard_language_search_hint" placeholder="${instructionLanguage === 'en' ? 'Type to search for a language' : instructionLanguage === 'th' ? 'พิมพ์เพื่อค้นหาภาษา' : '言語を入力して検索'}" style="min-width:300px; max-width:100%; background:#050d1a; color:#f4f8ff;" />
                 <datalist id="wizard_language_suggestions">${buildLanguageSearchOptions()}</datalist>
                 <button type="button" id="wizard_add_language_btn" style="padding:6px 12px; background:#222; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">${wizardUiCopy.add}</button>
               </div>
+              <div id="wizard_language_search_hint" class="wizard-help-text">${instructionLanguage === 'en' ? 'Choose a suggestion from the list.' : instructionLanguage === 'th' ? 'กรุณาเลือกจากรายการแนะนำเท่านั้น' : '候補リストから選択してください。'}</div>
               <div class="wizard-help-text">${wizardUiCopy.currentOrder}</div>
               <ol id="wizard_languages_ordered" style="text-align:left; max-width:720px; margin:8px auto; padding-left:24px;"></ol>
               <input id="wizard_languages_hidden" type="hidden" value="${state.learnedLanguages.join(', ')}" />
@@ -3153,6 +3158,18 @@
             const language = String(value || '').trim();
             if (!language) return;
 
+            if (!languageOptions.includes(language)) {
+              const invalidLanguageMessage = {
+                en: 'Please select a language from the suggestions.',
+                th: 'กรุณาเลือกภาษาจากรายการแนะนำเท่านั้น',
+                ja: '候補に表示された言語から選択してください。'
+              }[instructionLanguage];
+              showError('wizard_step2_error', invalidLanguageMessage);
+              const picker = document.getElementById('wizard_language_picker');
+              if (picker) picker.value = '';
+              return;
+            }
+
             if (state.learnedLanguages.includes(language)) {
               showError('wizard_step2_error', wizardUiCopy.duplicate);
               return;
@@ -3165,6 +3182,12 @@
 
           document.getElementById('wizard_add_language_btn').addEventListener('click', function() {
             addLanguage(document.getElementById('wizard_language_picker')?.value || '');
+          });
+
+          document.getElementById('wizard_language_picker').addEventListener('change', function() {
+            if (!languageOptions.includes(this.value.trim())) {
+              this.value = '';
+            }
           });
 
           document.getElementById('wizard_step2_back').addEventListener('click', function() {
