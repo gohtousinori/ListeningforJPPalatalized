@@ -1559,6 +1559,31 @@
   const PRE_SURVEY_CACHE_KEY = 'palatalizedsoundtest_pre_survey_cache';
   let confirmedPreSurveyData = null;
 
+  function prefixLanguageSearch(items, query) {
+    const normalizedQuery = String(query || '').trim().toLocaleLowerCase();
+    if (!normalizedQuery) return items;
+    return items.filter(item => {
+      const label = String(item.label || item.value || '').trim().toLocaleLowerCase();
+      return label.startsWith(normalizedQuery);
+    });
+  }
+
+  function allowLanguageDropdownOverflow(choicesInstance) {
+    const content = document.getElementById('jspsych-content');
+    const wizardScroll = content?.querySelector('.wizard-scroll');
+    const dropdown = choicesInstance?.dropdown?.element;
+    if (!wizardScroll || !dropdown) return;
+
+    wizardScroll.style.overflow = 'visible';
+    content.style.overflow = 'visible';
+    const restore = () => {
+      wizardScroll.style.overflow = '';
+      content.style.overflow = 'hidden';
+      document.removeEventListener('click', restore, true);
+    };
+    setTimeout(() => document.addEventListener('click', restore, true), 0);
+  }
+
   function savePreSurveyCache(data) {
     confirmedPreSurveyData = data && typeof data === 'object' ? { ...data } : null;
     try {
