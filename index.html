@@ -3527,18 +3527,38 @@
             nativeLanguagePicker.setChoiceByValue(state.nativeLanguage);
           }
 
+          nativeLanguagePicker.passedElement.element.addEventListener('change', function() {
+            state.nativeLanguage = nativeLanguagePicker.getValue(true) || '';
+          });
+
           document.getElementById('wizard_step1_next').addEventListener('click', function() {
             state.studyYear = document.getElementById('wizard_study_year')?.value || '';
             state.studyMonth = document.getElementById('wizard_study_month')?.value || '';
             state.stayYear = document.getElementById('wizard_stay_year')?.value || '';
             state.stayMonth = document.getElementById('wizard_stay_month')?.value || '';
-            state.nativeLanguage = document.getElementById('wizard_native_language')?.value || '';
+            state.nativeLanguage = nativeLanguagePicker.getValue(true) || document.getElementById('wizard_native_language')?.value || '';
 
             if (!state.studyYear || !state.studyMonth || !state.stayYear || !state.stayMonth || !state.nativeLanguage) {
+              const missingLabels = {
+                wizard_study_year: { en: 'study years', th: 'จำนวนปีที่เรียน', ja: '学習年数' },
+                wizard_study_month: { en: 'study months', th: 'จำนวนเดือนที่เรียน', ja: '学習月数' },
+                wizard_stay_year: { en: 'residence years', th: 'จำนวนปีที่พำนัก', ja: '滞在年数' },
+                wizard_stay_month: { en: 'residence months', th: 'จำนวนเดือนที่พำนัก', ja: '滞在月数' },
+                wizard_native_language: { en: 'native language', th: 'ภาษาแม่', ja: '母語' }
+              };
+              const missingFields = [
+                ['wizard_study_year', state.studyYear],
+                ['wizard_study_month', state.studyMonth],
+                ['wizard_stay_year', state.stayYear],
+                ['wizard_stay_month', state.stayMonth],
+                ['wizard_native_language', state.nativeLanguage]
+              ]
+                .filter(([, value]) => !value)
+                .map(([id]) => missingLabels[id][instructionLanguage]);
               showError('wizard_step1_error', {
-                en: 'Please choose your study duration, residence duration, and native language before continuing.',
-                th: 'กรุณาเลือกระยะเวลาเรียน ระยะเวลาพำนัก และภาษาแม่ก่อนดำเนินการต่อ',
-                ja: '続行する前に、学習期間、滞在期間、母語を選択してください。'
+                en: `Please complete: ${missingFields.join(', ')}.`,
+                th: `กรุณากรอก: ${missingFields.join(', ')} ก่อนดำเนินการต่อ`,
+                ja: `次の項目を選択してください：${missingFields.join('、')}。`
               }[instructionLanguage]);
               const firstMissingField = [
                 ['wizard_study_year', state.studyYear],
