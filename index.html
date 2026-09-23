@@ -276,6 +276,55 @@
       text-align: left;
     }
 
+    .yellow-action-note {
+      max-width: 600px;
+      margin: 20px auto 0;
+      padding: 11px 14px;
+      border-left: 3px solid #ffcc00;
+      border-top: 1px solid rgba(255, 204, 0, 0.32);
+      border-right: 1px solid rgba(255, 204, 0, 0.18);
+      border-bottom: 1px solid rgba(255, 204, 0, 0.18);
+      border-radius: 0 7px 7px 0;
+      background: rgba(255, 204, 0, 0.12);
+      color: #ffe58a;
+      font-size: 0.8em !important;
+      line-height: 1.55 !important;
+      text-align: center;
+    }
+
+    .response-screen {
+      max-width: 760px;
+      min-height: clamp(300px, 48vh, 460px);
+      margin: 0 auto;
+      padding: clamp(24px, 3vw, 42px) clamp(14px, 3vw, 34px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid rgba(181, 206, 240, 0.42);
+      border-radius: 10px;
+      background: rgba(10, 25, 45, 0.78);
+      box-shadow: 0 16px 34px rgba(1, 7, 18, 0.28);
+      text-align: center;
+    }
+
+    .response-screen-prompt {
+      max-width: 620px;
+      margin: 0;
+      color: #f4f8ff;
+      font-size: 1.04em !important;
+      line-height: 1.55 !important;
+    }
+
+    .response-screen .yellow-action-note {
+      margin-top: 18px;
+    }
+
+    .response-screen + #jspsych-html-button-response-btngroup {
+      width: min(100%, 760px);
+      margin: 18px auto 0 !important;
+    }
+
     .language-selection {
       max-width: 520px;
       margin: 0 auto;
@@ -3849,9 +3898,9 @@
       const filename = stimulusToRomaji[stim];
       const copy = languageCopy[instructionLanguage];
       const audioText = {
-        en: ['Listening task', 'Listen and choose', 'Press once to hear the sound. Answer choices will appear after playback finishes.', 'Press the button to hear the sound', 'If you cannot hear the sound', 'Please check your device settings, switch to Chrome or Firefox, or use a computer.'],
-        th: ['การฟังเสียง', 'ฟังแล้วเลือกคำตอบ', 'กดปุ่มหนึ่งครั้งเพื่อฟังเสียง เมื่อเสียงจบแล้วตัวเลือกคำตอบจะปรากฏขึ้น', 'กดปุ่มเพื่อฟังเสียง', 'หากไม่ได้ยินเสียง', 'กรุณาตรวจสอบอุปกรณ์ เปลี่ยนเป็น Chrome หรือ Firefox หรือใช้คอมพิวเตอร์'],
-        ja: ['聴取課題', '聞いて選ぶ', 'ボタンを1回押して音声を聞いてください。再生終了後に回答の選択肢が表示されます。', 'ボタンを押して音声を聞いてください', '音声が聞こえない場合', '機器を確認し、ChromeまたはFirefoxに変更するか、パソコンを使用してください。']
+        en: ['Listening task', 'Listen and choose', 'Press once to hear the sound. Answer choices will appear after playback finishes.', 'Press the button to hear the sound', 'If you cannot hear the sound', 'Please check your device settings, switch to Chrome or Firefox, or use a computer.', 'The sound can be played only once. After playback, you cannot return to this screen.'],
+        th: ['การฟังเสียง', 'ฟังแล้วเลือกคำตอบ', 'กดปุ่มหนึ่งครั้งเพื่อฟังเสียง เมื่อเสียงจบแล้วตัวเลือกคำตอบจะปรากฏขึ้น', 'กดปุ่มเพื่อฟังเสียง', 'หากไม่ได้ยินเสียง', 'กรุณาตรวจสอบอุปกรณ์ เปลี่ยนเป็น Chrome หรือ Firefox หรือใช้คอมพิวเตอร์', 'เสียงจะเล่นได้เพียงครั้งเดียว หลังจากเล่นแล้วจะไม่สามารถย้อนกลับมาหน้านี้ได้'],
+        ja: ['聴取課題', '聞いて選ぶ', 'ボタンを1回押して音声を聞いてください。再生終了後に回答の選択肢が表示されます。', 'ボタンを押して音声を聞いてください', '音声が聞こえない場合', '機器を確認し、ChromeまたはFirefoxに変更するか、パソコンを使用してください。', '音声は1回のみ再生できます。再生後、この画面に戻ることはできません。']
       }[instructionLanguage];
       return `
         <div class="audio-task">
@@ -3871,6 +3920,7 @@
             <strong>${audioText[4]}</strong><br>
             ${audioText[5]}
           </div>
+          <div class="yellow-action-note" role="note">${audioText[6]}</div>
           <p class="support-note">${languageCopy[instructionLanguage].supportNote}</p>
         </div>
       `;
@@ -3947,7 +3997,12 @@
         th: 'เลือกคำตอบที่ตรงกับเสียงที่คุณได้ยินมากที่สุด',
         ja: '聞こえた音に最も近い答えを選択してください。'
       }[instructionLanguage];
-      return `<p style="font-size:16px;">${responseText}</p>`;
+      const responseNote = {
+        en: 'This screen can be answered only once. After submitting, you cannot return to change your answer.',
+        th: 'หน้านี้ตอบได้เพียงครั้งเดียว หลังจากส่งคำตอบแล้วจะไม่สามารถย้อนกลับมาแก้ไขได้',
+        ja: 'この画面には1回のみ回答できます。送信後は戻って回答を変更できません。'
+      }[instructionLanguage];
+      return `<div class="response-screen"><p class="response-screen-prompt">${responseText}</p><div class="yellow-action-note" role="note">${responseNote}</div></div>`;
     },
     choices: jsPsych.timelineVariable('choices'),
     button_html: '<button class="jspsych-btn" style="min-width: 120px; margin: 8px;">%choice%</button>',
@@ -3963,7 +4018,9 @@
       buttonGroup.style.gap = '10px 12px';
       buttonGroup.style.maxWidth = '760px';
       buttonGroup.style.width = '100%';
-      buttonGroup.style.margin = '12px auto 0';
+      buttonGroup.style.margin = '18px auto 0';
+      buttonGroup.style.padding = '0 4px';
+      buttonGroup.style.alignSelf = 'center';
       const localizedOther = languageCopy[instructionLanguage].other;
 
       const otherInlineContainer = document.createElement('div');
