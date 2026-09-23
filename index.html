@@ -428,6 +428,68 @@
       background: #4f8bcf;
     }
 
+    .question-choice-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0 22px;
+    }
+
+    .question-choice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      min-height: 62px;
+      padding: 12px 16px;
+      border: 1px solid rgba(168, 204, 245, 0.62);
+      border-radius: 10px;
+      background: rgba(55, 101, 157, 0.2);
+      color: #eaf2ff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: background 160ms ease, border-color 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+    }
+
+    .question-choice:hover {
+      background: rgba(79, 139, 207, 0.38);
+      transform: translateY(-1px);
+    }
+
+    .question-choice.is-selected {
+      background: rgba(112, 173, 235, 0.5);
+      border-color: #c1defc;
+      box-shadow: 0 0 0 3px rgba(133, 171, 222, 0.22);
+    }
+
+    .question-choice-check {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      border: 1px solid rgba(210, 231, 255, 0.7);
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .question-choice.is-selected .question-choice-check {
+      border: 5px solid #f4f9ff;
+      background: #4f8bcf;
+    }
+
+    .question-email-field {
+      margin: 12px 0 0;
+      max-width: 500px;
+    }
+
+    @media (max-width: 520px) {
+      .question-choice-options {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 520px) {
       .language-options {
         grid-template-columns: 1fr;
@@ -545,6 +607,148 @@
       color: var(--muted-ink);
       font-size: 0.78em !important;
       line-height: 1.5 !important;
+    }
+
+    .confirmation-screen {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4px 0;
+    }
+
+    .confirmation-header {
+      margin: 0 0 18px;
+      text-align: center;
+    }
+
+    .confirmation-header h2 {
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .confirmation-subtitle {
+      margin: 7px auto 0;
+      max-width: 680px;
+      color: var(--muted-ink);
+      font-size: 0.86em !important;
+      line-height: 1.5 !important;
+    }
+
+    .confirmation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .confirmation-card {
+      min-width: 0;
+      padding: 17px 18px;
+      border: 1px solid rgba(181, 206, 240, 0.3);
+      border-radius: 10px;
+      background: linear-gradient(145deg, rgba(22, 43, 70, 0.88), rgba(8, 20, 37, 0.88));
+      box-shadow: 0 12px 26px rgba(1, 7, 18, 0.2);
+    }
+
+    .confirmation-card--wide {
+      grid-column: 1 / -1;
+    }
+
+    .confirmation-card-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 14px;
+      color: #ffffff;
+      font-size: 1.02em !important;
+      line-height: 1.35 !important;
+    }
+
+    .confirmation-card-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      width: 27px;
+      height: 27px;
+      border: 1px solid rgba(183, 231, 210, 0.65);
+      border-radius: 50%;
+      background: rgba(120, 205, 176, 0.16);
+      color: #b7e7d2;
+      font-size: 0.82em !important;
+    }
+
+    .confirmation-details {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+    }
+
+    .confirmation-detail {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.9fr) minmax(0, 1.5fr);
+      gap: 12px;
+      margin: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(181, 206, 240, 0.12);
+    }
+
+    .confirmation-detail:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .confirmation-detail dt {
+      color: var(--muted-ink);
+      font-size: 0.82em !important;
+      line-height: 1.45 !important;
+    }
+
+    .confirmation-detail dd {
+      min-width: 0;
+      margin: 0;
+      color: #f7fbff;
+      font-weight: 600;
+      line-height: 1.45 !important;
+      overflow-wrap: anywhere;
+    }
+
+    .confirmation-languages {
+      padding: 11px 13px;
+      border: 1px solid rgba(181, 206, 240, 0.18);
+      border-radius: 7px;
+      background: rgba(4, 13, 26, 0.38);
+      color: #f7fbff;
+      line-height: 1.6 !important;
+      overflow-wrap: anywhere;
+    }
+
+    .confirmation-note {
+      margin: 16px 2px 0 !important;
+      padding: 12px 14px;
+      border-left: 3px solid #ffcc00;
+      border-radius: 0 7px 7px 0;
+      background: rgba(255, 204, 0, 0.1);
+      color: #ffe58a;
+      font-size: 0.84em !important;
+      line-height: 1.55 !important;
+    }
+
+    @media (max-width: 620px) {
+      .confirmation-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .confirmation-card--wide {
+        grid-column: auto;
+      }
+
+      .confirmation-detail {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .confirmation-detail dt {
+        font-size: 0.76em !important;
+      }
     }
 
     .consent-actions {
@@ -1690,6 +1894,15 @@
           document.removeEventListener('click', restore, true);
         };
         setTimeout(() => document.addEventListener('click', restore, true), 0);
+      };
+
+      const prefixLanguageSearch = (items, query) => {
+        const normalizedQuery = String(query || '').trim().toLocaleLowerCase();
+        if (!normalizedQuery) return items;
+        return items.filter(item => {
+          const label = String(item.label || item.value || '').trim().toLocaleLowerCase();
+          return label.startsWith(normalizedQuery);
+        });
       };
 
       const normalizedLanguages = learnedLanguagesList
@@ -3290,7 +3503,7 @@
             allowHTML: false,
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
             noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
-            fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
+            searchFn: prefixLanguageSearch,
             position: 'auto'
           });
           nativeLanguagePicker.passedElement.element.addEventListener('showDropdown', () => allowLanguageDropdownOverflow(nativeLanguagePicker));
@@ -3375,7 +3588,7 @@
             allowHTML: false,
             noResultsText: instructionLanguage === 'en' ? 'No language found' : instructionLanguage === 'th' ? 'ไม่พบภาษา' : '言語が見つかりません',
             noChoicesText: instructionLanguage === 'en' ? 'No languages available' : instructionLanguage === 'th' ? 'ไม่มีภาษาในรายการ' : '利用できる言語がありません',
-            fuseOptions: { threshold: 0, distance: 0, ignoreLocation: true },
+            searchFn: prefixLanguageSearch,
             position: 'auto'
           });
           languagePicker.passedElement.element.addEventListener('showDropdown', () => allowLanguageDropdownOverflow(languagePicker));
@@ -3519,31 +3732,25 @@
               <h2 style="text-align:center; margin-top:0;">${instructionLanguage === 'en' ? 'Background information' : instructionLanguage === 'th' ? 'ข้อมูลพื้นฐาน' : '背景情報'}</h2>
               <label><strong>${wizardCopy.phonologyQuestion}</strong></label>
               <div class="wizard-help-text">${wizardCopy.formalTraining}</div>
-              <div style="margin:8px 0">
-                <select id="wizard_phonology_select">
-                  <option value="">${languageCopy[instructionLanguage].select}</option>
-                  <option value="無">${wizardCopy.no}</option>
-                  <option value="有">${wizardCopy.yes}</option>
-                </select>
-              </div>
-              <label><strong>${wizardCopy.emailLabel}</strong></label>
-              <div class="wizard-help-text">${wizardCopy.emailHelp}</div>
-              <div style="margin:12px auto; max-width:500px;">
-                <input id="wizard_email_address" type="email" placeholder="you@example.com" autocomplete="email" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
+              <div class="question-choice-options" data-choice-group="phonology" role="radiogroup" aria-label="${wizardCopy.phonologyQuestion}">
+                <button type="button" class="question-choice" data-choice-value="有" role="radio" aria-checked="false">${wizardCopy.yes}<span class="question-choice-check" aria-hidden="true"></span></button>
+                <button type="button" class="question-choice" data-choice-value="無" role="radio" aria-checked="false">${wizardCopy.no}<span class="question-choice-check" aria-hidden="true"></span></button>
               </div>
               <label><strong>${wizardCopy.pronunciationQuestion}</strong></label>
               <div class="wizard-help-text">${wizardCopy.formalTraining}</div>
-              <div style="margin:8px 0">
-                <select id="wizard_pron_select">
-                  <option value="">${languageCopy[instructionLanguage].select}</option>
-                  <option value="無">${wizardCopy.no}</option>
-                  <option value="有">${wizardCopy.yes}</option>
-                </select>
+              <div class="question-choice-options" data-choice-group="pronunciation" role="radiogroup" aria-label="${wizardCopy.pronunciationQuestion}">
+                <button type="button" class="question-choice" data-choice-value="有" role="radio" aria-checked="false">${wizardCopy.yes}<span class="question-choice-check" aria-hidden="true"></span></button>
+                <button type="button" class="question-choice" data-choice-value="無" role="radio" aria-checked="false">${wizardCopy.no}<span class="question-choice-check" aria-hidden="true"></span></button>
               </div>
               <div id="wizard_institution_wrap" style="display:none; margin-top: 14px;">
                 <label><strong>${wizardCopy.institutionQuestion}</strong></label>
                 <div class="wizard-help-text">${wizardCopy.institutionHelp}</div>
                 <input id="wizard_institution_input" type="text" placeholder="${wizardCopy.institutionPlaceholder}" style="width:100%; max-width:680px; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em; margin-top:8px;" />
+              </div>
+              <label><strong>${wizardCopy.emailLabel}</strong></label>
+              <div class="wizard-help-text">${wizardCopy.emailHelp}</div>
+              <div class="question-email-field">
+                <input id="wizard_email_address" type="email" placeholder="you@example.com" autocomplete="email" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:6px; font-size:0.95em;" />
               </div>
               </div>
               <div class="wizard-nav">
@@ -3556,28 +3763,42 @@
             </div>
           `;
 
-          document.getElementById('wizard_phonology_select').value = state.phonologyTheoryExperience;
           document.getElementById('wizard_email_address').value = state.emailAddress;
-          document.getElementById('wizard_pron_select').value = state.pronExperience;
           document.getElementById('wizard_institution_input').value = state.institution;
 
-          const phonSelect = document.getElementById('wizard_phonology_select');
-          const pronSelect = document.getElementById('wizard_pron_select');
           const institutionWrap = document.getElementById('wizard_institution_wrap');
           const institutionInput = document.getElementById('wizard_institution_input');
 
+          const setChoice = (groupName, value) => {
+            document.querySelectorAll(`[data-choice-group="${groupName}"] .question-choice`).forEach(button => {
+              const isSelected = button.dataset.choiceValue === value;
+              button.classList.toggle('is-selected', isSelected);
+              button.setAttribute('aria-checked', String(isSelected));
+            });
+          };
+
+          const getChoice = (groupName) => document.querySelector(`[data-choice-group="${groupName}"] .question-choice.is-selected`)?.dataset.choiceValue || '';
+          setChoice('phonology', state.phonologyTheoryExperience);
+          setChoice('pronunciation', state.pronExperience);
+
           const toggleInstitution = () => {
-            const show = pronSelect?.value === '有';
+            const show = getChoice('pronunciation') === '有';
             institutionWrap.style.display = show ? 'block' : 'none';
             if (!show && institutionInput) institutionInput.value = '';
           };
 
-          phonSelect.addEventListener('change', () => {
-            state.phonologyTheoryExperience = phonSelect?.value || '';
+          document.querySelectorAll('[data-choice-group="phonology"] .question-choice').forEach(button => {
+            button.addEventListener('click', () => {
+              state.phonologyTheoryExperience = button.dataset.choiceValue || '';
+              setChoice('phonology', state.phonologyTheoryExperience);
+            });
           });
-          pronSelect.addEventListener('change', () => {
-            state.pronExperience = pronSelect?.value || '';
-            toggleInstitution();
+          document.querySelectorAll('[data-choice-group="pronunciation"] .question-choice').forEach(button => {
+            button.addEventListener('click', () => {
+              state.pronExperience = button.dataset.choiceValue || '';
+              setChoice('pronunciation', state.pronExperience);
+              toggleInstitution();
+            });
           });
           institutionInput.addEventListener('input', () => {
             state.institution = institutionInput?.value || '';
@@ -3594,9 +3815,9 @@
           });
 
           document.getElementById('wizard_step3_next').addEventListener('click', function() {
-            state.phonologyTheoryExperience = document.getElementById('wizard_phonology_select')?.value || '';
+            state.phonologyTheoryExperience = getChoice('phonology');
             state.emailAddress = document.getElementById('wizard_email_address')?.value || '';
-            state.pronExperience = document.getElementById('wizard_pron_select')?.value || '';
+            state.pronExperience = getChoice('pronunciation');
             state.institution = document.getElementById('wizard_institution_input')?.value || '';
 
             if (!state.phonologyTheoryExperience || !state.pronExperience) {
@@ -3641,33 +3862,50 @@
         }[instructionLanguage];
 
         displayElement.innerHTML = `
-          <div style="color:#fff; text-align:left; max-width:900px; margin:0 auto; display:flex; flex-direction:column; height:100%; min-height:0;">
+          <div class="confirmation-screen" style="color:#fff; text-align:left; display:flex; flex-direction:column; height:100%; min-height:0;">
             <div class="wizard-scroll">
-            <h2 style="text-align:center; margin-top:0;">${confirmationCopy.title}</h2>
-            <div style="background:#111; border:1px solid #444; border-radius:8px; padding:18px 20px; line-height:1.8;">
-              <h3 style="margin-top:0;">1. ${confirmationCopy.basic}</h3>
-              <div><strong>${confirmationCopy.duration}:</strong> ${state.studyYear} / ${state.studyMonth}</div>
-              <div><strong>${confirmationCopy.residence}:</strong> ${state.stayYear} / ${state.stayMonth}</div>
-              <div><strong>${confirmationCopy.native}:</strong> ${state.nativeLanguage}</div>
-              <h3>2. ${confirmationCopy.languages}</h3>
-              <div><strong>${confirmationCopy.order}:</strong> ${learnedLanguagesList || confirmationCopy.none}</div>
-              <div><strong>${confirmationCopy.japaneseOrder}:</strong> ${languageMetrics.japaneseLanguageOrder || confirmationCopy.none}</div>
-              <div><strong>${confirmationCopy.total}:</strong> ${languageMetrics.totalLanguagesLearned || confirmationCopy.none}</div>
-              <h3>3. ${confirmationCopy.other}</h3>
-              <div><strong>${confirmationCopy.phonology}:</strong> ${state.phonologyTheoryExperience}</div>
-              <div><strong>${confirmationCopy.pronunciation}:</strong> ${state.pronExperience}</div>
-              <div><strong>${confirmationCopy.institution}:</strong> ${institution || confirmationCopy.none}</div>
-              <div><strong>${confirmationCopy.email}:</strong> ${email || confirmationCopy.none}</div>
+              <header class="confirmation-header">
+                <p class="audio-task-kicker">${confirmationCopy.title}</p>
+                <h2>${confirmationCopy.title}</h2>
+                <p class="confirmation-subtitle">${confirmationCopy.note}</p>
+              </header>
+
+              <div class="confirmation-grid">
+                <section class="confirmation-card">
+                  <h3 class="confirmation-card-title"><span class="confirmation-card-number">1</span>${confirmationCopy.basic}</h3>
+                  <dl class="confirmation-details">
+                    <div class="confirmation-detail"><dt>${confirmationCopy.duration}</dt><dd>${state.studyYear} / ${state.studyMonth}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.residence}</dt><dd>${state.stayYear} / ${state.stayMonth}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.native}</dt><dd>${state.nativeLanguage}</dd></div>
+                  </dl>
+                </section>
+
+                <section class="confirmation-card">
+                  <h3 class="confirmation-card-title"><span class="confirmation-card-number">2</span>${confirmationCopy.languages}</h3>
+                  <dl class="confirmation-details">
+                    <div class="confirmation-detail"><dt>${confirmationCopy.japaneseOrder}</dt><dd>${languageMetrics.japaneseLanguageOrder || confirmationCopy.none}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.total}</dt><dd>${languageMetrics.totalLanguagesLearned || confirmationCopy.none}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.order}</dt><dd class="confirmation-languages">${learnedLanguagesList || confirmationCopy.none}</dd></div>
+                  </dl>
+                </section>
+
+                <section class="confirmation-card confirmation-card--wide">
+                  <h3 class="confirmation-card-title"><span class="confirmation-card-number">3</span>${confirmationCopy.other}</h3>
+                  <dl class="confirmation-details">
+                    <div class="confirmation-detail"><dt>${confirmationCopy.phonology}</dt><dd>${state.phonologyTheoryExperience}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.pronunciation}</dt><dd>${state.pronExperience}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.institution}</dt><dd>${institution || confirmationCopy.none}</dd></div>
+                    <div class="confirmation-detail"><dt>${confirmationCopy.email}</dt><dd>${email || confirmationCopy.none}</dd></div>
+                  </dl>
+                </section>
+              </div>
             </div>
-            <div style="margin-top:18px; color:#ccc; font-size:0.95em; line-height:1.7;">
-              ${confirmationCopy.note}
-            </div>
-            </div>
+
             <div class="wizard-nav">
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.back}</button>
-              <button type="button" id="wizard_confirm_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.next}</button>
-            </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button type="button" id="wizard_confirm_back" style="padding:10px 24px; background:#333; color:#fff; border:1px solid #666; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.back}</button>
+                <button type="button" id="wizard_confirm_next" style="padding:10px 30px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-size:1em; border-radius:4px;">${confirmationCopy.next}</button>
+              </div>
             </div>
           </div>
         `;
